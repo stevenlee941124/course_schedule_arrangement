@@ -1,0 +1,19 @@
+CREATE TABLE IF NOT EXISTS courses (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  time TEXT NOT NULL,
+  description TEXT,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS selections (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  course_id TEXT NOT NULL,
+  selected_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_course_time ON courses(time);
+CREATE INDEX IF NOT EXISTS idx_selection_user ON selections(user_id);
