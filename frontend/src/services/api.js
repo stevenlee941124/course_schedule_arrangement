@@ -17,7 +17,16 @@ export const courseApi = {
   updateCourse: (id, courseData) => api.put(`/courses/${id}`, courseData),
 
   // 刪除課程
-  deleteCourse: (id) => api.delete(`/courses/${id}`)
+  deleteCourse: (id) => api.delete(`/courses/${id}`),
+
+  // 檢查時間衝突（新增）
+  checkConflict: (time, excludeCourseId = null) => {
+    const params = { time };
+    if (excludeCourseId) {
+      params.excludeCourseId = excludeCourseId;
+    }
+    return api.get('/courses/check-conflict', { params });
+  }
 };
 
 export default api;
