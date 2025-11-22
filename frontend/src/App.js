@@ -1,82 +1,71 @@
 import React, { useState } from 'react';
-import { Plus, Trash2, Edit2, BookOpen, Clock, Calendar } from 'lucide-react';
-import ConflictModal from './components/ConflictModal'; // 引入剛剛的 Modal
+import { Plus, Trash2, Edit2, BookOpen, Calendar } from 'lucide-react';
+import ConflictModal from './components/ConflictModal';
 
 const App = () => {
-  // 1. 狀態管理
-  const [courses, setCourses] = useState([]); // 存放所有課程
+  // State Management
+  const [courses, setCourses] = useState([]);
   const [formData, setFormData] = useState({
     name: '',
     day: 'Monday',
     period: '1',
     type: 'Major',
-    color: '#a5b4fc' // 預設顏色
+    color: '#a5b4fc'
   });
 
-  // 衝堂處理用的狀態
+  // Conflict Handling State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [conflictMessage, setConflictMessage] = useState('');
-  const [pendingCourse, setPendingCourse] = useState(null); // 暫存要加入的課程
+  const [pendingCourse, setPendingCourse] = useState(null);
 
-  // 預設顏色盤
   const colorPalette = [
     '#fca5a5', '#fdba74', '#fcd34d', '#86efac', 
     '#93c5fd', '#a5b4fc', '#d8b4fe', '#f0abfc'
   ];
 
-  // 處理輸入變更
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
 
-  // 2. 核心邏輯：新增課程 (含衝堂檢查)
   const handleAddCourse = () => {
-    if (!formData.name) return alert("請輸入課程名稱");
+    if (!formData.name) return alert("Please enter a course name.");
 
     const newCourse = {
-      id: Date.now(), // 產生唯一 ID
+      id: Date.now(),
       ...formData,
-      period: parseInt(formData.period) // 確保節次是數字
+      period: parseInt(formData.period)
     };
 
-    // 檢查是否衝堂
+    // Check for conflicts
     const existingCourse = courses.find(
       c => c.day === newCourse.day && c.period === newCourse.period
     );
 
     if (existingCourse) {
-      // 如果有衝堂，設定訊息並打開 Modal
-      setConflictMessage(`「${existingCourse.day} 第 ${existingCourse.period} 節」已經有課程：${existingCourse.name}。是否覆蓋？`);
+      setConflictMessage(`[${existingCourse.day} Period ${existingCourse.period}] already has a course: "${existingCourse.name}". Do you want to overwrite it?`);
       setPendingCourse(newCourse);
       setIsModalOpen(true);
     } else {
-      // 沒衝堂，直接加入
       setCourses([...courses, newCourse]);
     }
   };
 
-  // 確認覆蓋 (Modal 的 Confirm 按鈕)
   const confirmOverride = () => {
     if (pendingCourse) {
-      // 移除舊的 (相同時間的)，加入新的
       const filteredCourses = courses.filter(
         c => !(c.day === pendingCourse.day && c.period === pendingCourse.period)
       );
       setCourses([...filteredCourses, pendingCourse]);
-      
-      // 重置狀態
       setIsModalOpen(false);
       setPendingCourse(null);
     }
   };
 
-  // 刪除課程
   const deleteCourse = (id) => {
     setCourses(courses.filter(c => c.id !== id));
   };
 
-  // 3. 渲染課表格子 (這裡修復了顏色顯示問題)
   const renderCell = (day, period) => {
     const course = courses.find(c => c.day === day && c.period === period);
 
@@ -84,7 +73,7 @@ const App = () => {
       return (
         <div 
           className="h-full w-full p-2 rounded-md shadow-sm text-sm flex flex-col justify-center items-center text-center"
-          style={{ backgroundColor: course.color, color: '#333' }} // ★ 關鍵：這裡應用顏色
+          style={{ backgroundColor: course.color, color: '#333' }}
         >
           <span className="font-bold block">{course.name}</span>
           <span className="text-xs opacity-75">{course.type}</span>
@@ -96,7 +85,6 @@ const App = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 p-8 font-sans text-slate-800">
-      {/* 衝堂警示視窗 */}
       <ConflictModal 
         isOpen={isModalOpen} 
         message={conflictMessage} 
@@ -113,7 +101,7 @@ const App = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         
-        {/* 左側：控制面板 */}
+        {/* Control Panel */}
         <div className="lg:col-span-4 space-y-6">
           <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
             <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
@@ -157,7 +145,7 @@ const App = () => {
                 <input type="text" name="type" value={formData.type} onChange={handleInputChange} className="w-full p-2 border rounded-md" placeholder="Major, Elective..." />
               </div>
 
-              {/* 顏色選擇器 */}
+              {/* Color Picker */}
               <div>
                 <label className="block text-sm font-medium mb-2">Color</label>
                 <div className="flex flex-wrap gap-2 mb-2">
@@ -178,14 +166,7 @@ const App = () => {
                     onChange={handleInputChange} 
                     className="h-8 w-12 p-0 border-0" 
                   />
-                  <span className="text-xs text-slate-500">{formData.color}</span>
                 </div>
-              </div>
-
-              {/* 預覽 */}
-              <div className="p-4 rounded-lg text-center mt-4" style={{ backgroundColor: formData.color }}>
-                <span className="font-bold block text-slate-800">{formData.name || 'Course Name'}</span>
-                <span className="text-sm opacity-75 text-slate-800">{formData.type}</span>
               </div>
 
               <button 
@@ -197,7 +178,7 @@ const App = () => {
             </div>
           </div>
 
-          {/* 下方：課程列表 */}
+          {/* Course List */}
           <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
             <h2 className="text-xl font-semibold mb-4">Course List ({courses.length})</h2>
             <div className="space-y-3 max-h-64 overflow-y-auto">
@@ -220,7 +201,7 @@ const App = () => {
           </div>
         </div>
 
-        {/* 右側：課表網格 */}
+        {/* Schedule Grid */}
         <div className="lg:col-span-8">
           <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 overflow-hidden">
             <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
