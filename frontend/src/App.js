@@ -1,194 +1,263 @@
-import React, { useState } from 'react';
-import { Plus, Trash2, Edit2, BookOpen, Calendar, Clock, X } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { Plus, Trash2, Edit2, BookOpen, Calendar, Clock, X, CheckSquare, Square } from 'lucide-react';
 import ConflictModal from './components/ConflictModal';
 
 const App = () => {
-  // 1. 狀態管理
-  const [courses, setCourses] = useState([]); // 存放所有課程
+  // Helper function to format period range (e.g., [1, 2, 3] -> "1-3")
+  // *** 必須先宣告，才能在 useMemo 內使用 ***
+  const formatPeriodRange = (periods) => {
+    if (periods.length === 0) return '';
+    const isContinuous = periods[periods.length - 1] === periods[0] + periods.length - 1;
+    if (isContinuous) {
+        return periods.length > 1 ? `${periods[0]}-${periods[periods.length - 1]}` : periods[0].toString();
+    } else {
+        return periods.join(', ');
+    }
+  };
+    
+  // 1. Core State: The central pool of all courses (potential or scheduled)
+  const [coursePool, setCoursePool] = useState([]); 
 
-  // 用來設定新課程的表單資料
+  // Form data for new course
   const [formData, setFormData] = useState({
     name: '',
     day: 'Monday',
-    startPeriod: '1', // 更改為範圍選擇的起始節次
-    endPeriod: '1',   // 更改為範圍選擇的結束節次
+    startPeriod: '1',
+    endPeriod: '1',
     type: 'Major',
     color: '#a5b4fc'
   });
 
-  // 衝堂處理用的狀態
+  // Conflict Handling State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [conflictMessage, setConflictMessage] = useState('');
-  const [pendingCourses, setPendingCourses] = useState([]); // 暫存要加入的一組課程
+  const [pendingGroup, setPendingGroup] = useState(null); 
 
-  // Grid 點擊互動用的狀態
-  const [isGridMode, setIsGridMode] = useState(false); // 控制是否在 "Grid 點擊模式"
-  const [selectedGridCell, setSelectedGridCell] = useState(null); // 點擊格子後，暫存該格子的 (day, period)
+  // Grid Interaction State
+  const [isGridMode, setIsGridMode] = useState(false); 
 
-  // 預設顏色盤
+  // Default Color Palette
   const colorPalette = [
     '#fca5a5', '#fdba74', '#fcd34d', '#86efac', 
     '#93c5fd', '#a5b4fc', '#d8b4fe', '#f0abfc'
   ];
 
-  // 處理輸入變更
+  // Memoized list of currently scheduled courses (filtered from the pool)
+  const scheduledCourses = useMemo(() => 
+    coursePool.filter(c => c.selected), 
+    [coursePool]
+  );
+  
+  // Memoized list of unique course groups for the list view
+  const courseGroups = useMemo(() => {
+    const groups = {};
+    coursePool.forEach(course => {
+        const key = `${course.groupId}-${course.day}`;
+        if (!groups[key]) {
+            groups[key] = {
+                groupId: course.groupId,
+                name: course.name,
+                day: course.day,
+                type: course.type,
+                color: course.color,
+                periods: [],
+                selected: course.selected,
+            };
+        }
+        groups[key].periods.push(course.period);
+    });
+    // Sort periods and format range display
+    Object.values(groups).forEach(group => {
+        group.periods.sort((a, b) => a - b);
+        // 現在 formatPeriodRange 已經在 useMemo 之前被宣告了，所以可以正常存取
+        group.periodDisplay = formatPeriodRange(group.periods); 
+    });
+    return Object.values(groups);
+  }, [coursePool]);
+
+
+  // Handle Input Changes
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
   
-  // 3. 核心邏輯：建立課程物件 (處理多節次)
-  const createCourseObjects = () => {
+  // 3. Create Course Objects (Handles Multiple Periods and adds Group ID)
+  const createCourseObjects = (groupId) => {
     if (!formData.name) return [];
     
-    // 確保節次是數字
     const start = parseInt(formData.startPeriod);
     const end = parseInt(formData.endPeriod);
 
     if (start > end) {
-      alert("起始節次不能大於結束節次！");
+      alert("Start Period cannot be greater than End Period!");
       return [];
     }
 
     const newCourses = [];
-    // 迴圈產生該時間範圍內的所有課程物件
     for (let period = start; period <= end; period++) {
       newCourses.push({
-        id: Date.now() + period, // 確保每個節次有唯一 ID
+        id: Date.now() + period,
+        groupId: groupId, 
         name: formData.name,
         day: formData.day,
         period: period,
         type: formData.type,
         color: formData.color,
-        // 額外資訊：讓 renderCell 知道這是一個多節次課程的哪個部分
-        isStart: period === start, 
-        duration: end - start + 1 
       });
     }
     return newCourses;
   };
 
-  // 4. 處理新增課程按鈕點擊
+  // 4. Add Course to POOL (NOT Schedule)
   const handleAddCourse = () => {
-    const newCourses = createCourseObjects();
+    const groupId = Date.now();
+    const newCourses = createCourseObjects(groupId);
     if (newCourses.length === 0) return;
 
-    checkAndAddCourses(newCourses);
+    // Add to pool, default selected: false
+    setCoursePool(prev => [...prev, ...newCourses.map(c => ({...c, selected: false}))]);
+    setIsGridMode(false); 
+    setFormData(prev => ({...prev, name: '', type: 'Major'})); 
   };
   
-  // 5. 處理 Grid 點擊事件 (點擊課表格子)
-  const handleGridClick = (day, period) => {
-    // 1. 如果點擊時，該格已經有課，則執行刪除
-    const existingCourse = courses.find(c => c.day === day && c.period === period);
-    if (existingCourse) {
-      // 找到該課程物件中的任一個節次 ID
-      const baseCourse = courses.find(c => c.name === existingCourse.name && c.day === existingCourse.day);
-      if (baseCourse) {
-        // 刪除該課程所有節次
-        if (window.confirm(`確定要刪除課程「${baseCourse.name}」在 ${baseCourse.day} 的所有節次嗎？`)) {
-           setCourses(prevCourses => prevCourses.filter(c => c.name !== baseCourse.name || c.day !== baseCourse.day));
-        }
-      }
-      return;
+  // 5. Handle Toggle Schedule (The Checkbox Click - CONFLICT CHECK POINT)
+  const handleToggleSchedule = (targetGroupId, targetDay, isSelecting) => {
+    
+    // 1. Deselecting: Simple update and return
+    if (!isSelecting) {
+        setCoursePool(prev => prev.map(c => 
+            c.groupId === targetGroupId && c.day === targetDay ? {...c, selected: false} : c
+        ));
+        return;
     }
 
-    // 2. 如果點擊時，該格沒課，則進入新增模式
-    setIsGridMode(true);
-    // 預設將 Day 和 StartPeriod 設定為點擊的格子
-    setFormData(prev => ({
-        ...prev,
-        day: day,
-        startPeriod: String(period),
-        endPeriod: String(period)
-    }));
-    setSelectedGridCell({ day, period });
-  };
-
-
-  // 6. 衝堂檢查與加入邏輯
-  const checkAndAddCourses = (newCourses) => {
-    let conflictFound = false;
-    let conflictDetails = [];
-
-    newCourses.forEach(newC => {
-      const existingC = courses.find(
-        c => c.day === newC.day && c.period === newC.period
-      );
-
-      if (existingC) {
-        conflictFound = true;
-        conflictDetails.push(`${newC.day} 第 ${newC.period} 節 (${existingC.name})`);
-      }
+    // 2. Selecting: Check Conflicts
+    const coursesToSchedule = coursePool.filter(c => c.groupId === targetGroupId && c.day === targetDay);
+    const conflicts = [];
+    
+    // Check against all other currently scheduled courses (excluding the one being toggled)
+    scheduledCourses.forEach(sc => {
+        coursesToSchedule.forEach(newC => {
+            if (sc.day === newC.day && sc.period === newC.period) {
+                // Conflict found
+                conflicts.push({ newCourse: newC, existingCourse: sc });
+            }
+        });
     });
 
-    if (conflictFound) {
-      // 如果有衝堂，打開 Modal
-      setConflictMessage(
-        `以下時段發生衝堂：\n${conflictDetails.join(', ')}\n\n是否覆蓋這些時段？`
-      );
-      setPendingCourses(newCourses);
-      setIsModalOpen(true);
-    } else {
-      // 沒衝堂，直接加入
-      setCourses(prevCourses => [...prevCourses, ...newCourses]);
-      setIsGridMode(false); // 新增成功，退出 Grid 模式
-    }
-  };
-
-  // 7. 確認覆蓋 (Modal 的 Confirm 按鈕)
-  const confirmOverride = () => {
-    if (pendingCourses.length > 0) {
-      let currentCourses = [...courses];
-      
-      // 先從現有課程中，刪除所有與 pendingCourses 衝突的時段
-      pendingCourses.forEach(pendingC => {
-        currentCourses = currentCourses.filter(
-          c => !(c.day === pendingC.day && c.period === pendingC.period)
+    if (conflicts.length > 0) {
+        // Show Modal, store pending action
+        const conflictDetails = conflicts.map(c => 
+            `${c.newCourse.day} Period ${c.newCourse.period} (Conflicting with: ${c.existingCourse.name})`
         );
-      });
+        
+        setConflictMessage(
+            `The following periods have conflicts:\n${conflictDetails.join('\n')}\n\nDo you want to overwrite these scheduled courses?`
+        );
+        setPendingGroup(coursesToSchedule);
+        setIsModalOpen(true);
+    } else {
+        // No conflict, schedule directly
+        setCoursePool(prev => prev.map(c => 
+            c.groupId === targetGroupId && c.day === targetDay ? {...c, selected: true} : c
+        ));
+    }
+  };
 
-      // 加入新的課程
-      setCourses([...currentCourses, ...pendingCourses]);
-      
-      // 重置狀態
-      setIsModalOpen(false);
-      setPendingCourses([]);
-      setIsGridMode(false); // 退出 Grid 模式
+  // 6. Confirm Overwrite (Modal Confirm Button)
+  const confirmOverride = () => {
+    if (!pendingGroup || pendingGroup.length === 0) return;
+
+    let newPool = [...coursePool];
+    const targetGroupId = pendingGroup[0].groupId;
+    
+    // 找出所有與 pendingGroup 衝突的現有課程群組 ID
+    const conflictingGroupIds = new Set();
+    
+    pendingGroup.forEach(pendingC => {
+        // 尋找在該時段且目前已選中的衝突課程
+        const conflictingCourse = scheduledCourses.find(
+            c => c.day === pendingC.day && c.period === pendingC.period && c.groupId !== targetGroupId
+        );
+        
+        if (conflictingCourse) {
+            // 將整個衝突課程的群組 ID 記錄下來
+            conflictingGroupIds.add(conflictingCourse.groupId);
+        }
+    });
+
+    // 1. 將所有衝突的課程群組標記為 deselected (整組移除)
+    if (conflictingGroupIds.size > 0) {
+        newPool = newPool.map(c => {
+            if (conflictingGroupIds.has(c.groupId) && c.day === pendingGroup[0].day) {
+                return {...c, selected: false};
+            }
+            return c;
+        });
+    }
+
+    // 2. 選中 pending course group (加入新的課程群組)
+    newPool = newPool.map(c => 
+        c.groupId === targetGroupId ? {...c, selected: true} : c
+    );
+        
+    setCoursePool(newPool);
+    // Reset state
+    setIsModalOpen(false);
+    setPendingGroup(null);
+  };
+  
+  // 7. Delete logic for list (Deletes all periods of a specific group)
+  const deleteCourseGroup = (targetGroupId, targetDay) => {
+    if (window.confirm(`Are you sure you want to delete the course "${courseGroups.find(g => g.groupId === targetGroupId && g.day === targetDay)?.name}" on ${targetDay}?`)) {
+        setCoursePool(prevCourses => prevCourses.filter(c => c.groupId !== targetGroupId || c.day !== targetDay));
+    }
+  };
+
+  // 8. Handle Grid Click (Now only for deletion/interaction with SCHEDULED courses)
+  const handleGridClick = (day, period) => {
+    const existingCourse = scheduledCourses.find(c => c.day === day && c.period === period);
+    
+    if (existingCourse) {
+        deleteCourseGroup(existingCourse.groupId, existingCourse.day);
+    } else {
+        // If empty cell is clicked, pre-fill form data for quick add
+        setIsGridMode(true);
+        setFormData(prev => ({
+            ...prev,
+            day: day,
+            startPeriod: String(period),
+            endPeriod: String(period)
+        }));
     }
   };
 
 
-  // 8. 渲染課表格子 (處理多節次樣式)
+  // 9. Render Schedule Cells 
   const renderCell = (day, period) => {
-    // 找到該格子的課程
-    const course = courses.find(c => c.day === day && c.period === period);
+    const course = scheduledCourses.find(c => c.day === day && c.period === period);
 
     if (course) {
-      // 找到該課程是從哪一節開始的 (只在起始節次渲染完整的 div)
-      const isStart = courses.some(
-          c => c.name === course.name && c.day === course.day && c.period < period
-      ) === false; // 判斷是否為課程的第一節
-
-      // 計算該課程連續幾節 (只算一次)
-      const duration = courses.filter(
-          c => c.name === course.name && c.day === course.day && c.period >= period
-      ).length;
+      // Find the group's duration and start period using the scheduled courses
+      const courseGroup = scheduledCourses.filter(c => c.groupId === course.groupId && c.day === course.day);
+      const minPeriod = Math.min(...courseGroup.map(c => c.period));
+      const duration = courseGroup.length;
       
-      // 如果不是起始節次，則不需要渲染內容，格子會被上一個節次的 div 覆蓋
+      const isStart = period === minPeriod;
+
       if (!isStart) return null;
 
       return (
         <div 
-          // height: calc(duration * 6rem - 4px) 
           style={{ 
             backgroundColor: course.color, 
             color: '#333', 
-            gridRow: `${period} / span ${duration}`,
-            height: `${duration * 6.25}rem`, // 假設每個格子 6rem (h-24) + border 
+            height: `${duration * 6.25}rem`, 
           }}
           className={`absolute inset-0 w-full p-2 rounded-md shadow-sm text-sm flex flex-col justify-center items-center text-center cursor-pointer`}
           onClick={(e) => {
-            e.stopPropagation(); // 避免點擊刪除時觸發 GridClick
+            e.stopPropagation(); 
             handleGridClick(day, period);
           }}
         >
@@ -200,66 +269,19 @@ const App = () => {
     }
     return null;
   };
-
-
-  // 9. 渲染課程列表 (簡化版)
-  const renderCourseList = () => {
-    // 找出所有唯一的課程 (因為多節次課程會有重複的 name+day)
-    const uniqueCourses = courses.reduce((acc, current) => {
-        const x = acc.find(item => item.name === current.name && item.day === current.day);
-        if (!x) {
-            return acc.concat([current]);
-        } else {
-            return acc;
-        }
-    }, []);
-
-    return uniqueCourses.map(course => {
-        // 找出該課程的所有節次，並排序
-        const periods = courses
-            .filter(c => c.name === course.name && c.day === course.day)
-            .map(c => c.period)
-            .sort((a, b) => a - b);
-        
-        // 格式化節次範圍 (例如: 1-3)
-        let periodDisplay = periods.length === 0 ? '' : periods[0].toString();
-        if (periods.length > 1) {
-            periodDisplay += periods[periods.length - 1] > periods[0] + 1 ? 
-                             `-${periods[periods.length - 1]}` : 
-                             (periods.map((p, i) => i > 0 ? `,${p}` : '')).join('');
-        }
-
-        return (
-            <div key={course.id} className="flex items-center justify-between p-3 rounded-lg border border-slate-100 hover:shadow-md transition-shadow bg-white">
-                <div className="flex items-center gap-3">
-                    <div className="w-3 h-10 rounded-full" style={{ backgroundColor: course.color }}></div>
-                    <div>
-                        <div className="font-bold">{course.name}</div>
-                        <div className="text-xs text-slate-500">{course.day} - Period {periodDisplay} ({course.type})</div>
-                    </div>
-                </div>
-                <button onClick={() => deleteCourse(course.id)} className="text-red-400 hover:text-red-600 p-2">
-                    <Trash2 size={18} />
-                </button>
-            </div>
-        );
-    });
-  };
-
-  // 渲染 Section 選擇
+  
   const periodOptions = [1, 2, 3, 4, 5, 6, 7, 8];
 
   return (
     <div className="min-h-screen bg-slate-50 p-8 font-sans text-slate-800">
-      {/* 衝堂警示視窗 */}
+      {/* Conflict Modal */}
       <ConflictModal 
         isOpen={isModalOpen} 
         message={conflictMessage} 
         onConfirm={confirmOverride} 
         onCancel={() => {
           setIsModalOpen(false);
-          setPendingCourses([]);
-          setIsGridMode(false); // 取消時也要退出 Grid 模式
+          setPendingGroup(null);
         }} 
       />
 
@@ -267,29 +289,29 @@ const App = () => {
         <h1 className="text-3xl font-bold text-slate-800 flex items-center gap-2">
           <BookOpen className="text-blue-600" /> Course Management System
         </h1>
-        <p className="text-slate-500">Manage your courses easily with conflict detection and custom colors</p>
+        <p className="text-slate-500">Manage your courses easily with selection, conflict detection and custom colors</p>
       </header>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         
-        {/* 左側：控制面板 */}
+        {/* Left: Control Panel */}
         <div className="lg:col-span-4 space-y-6">
           <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
             <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-              <Edit2 size={20} /> Add New Course
+              <Edit2 size={20} /> Add New Course to Pool
             </h2>
             
             <div className="space-y-4">
               
-              {/* Grid 互動提示 */}
-              <div className={`p-3 rounded-lg text-sm font-medium transition-all ${isGridMode ? 'bg-green-100 text-green-800 border-2 border-green-400' : 'bg-blue-100 text-blue-800 border border-blue-200'}`}>
+              {/* Grid Interaction Tip */}
+              <div className='p-3 rounded-lg text-sm font-medium transition-all bg-blue-100 text-blue-800 border border-blue-200'>
                 {isGridMode ? (
                     <div className='flex items-center justify-between'>
-                        <span>? 課程資訊已輸入，點擊下方 **"Confirm Add"** 完成新增。</span>
+                        <span>? Time selected! Enter details and click **"Add to Pool"**.</span>
                         <X size={18} className='cursor-pointer' onClick={() => setIsGridMode(false)} />
                     </div>
                 ) : (
-                    <span>? **點擊課表上的空格**，自動選定時間並開始新增。</span>
+                    <span>? **Click an empty cell** on the schedule to pre-fill the time.</span>
                 )}
               </div>
 
@@ -315,7 +337,7 @@ const App = () => {
                   </select>
                 </div>
                 
-                {/* 範圍選擇 - Start Period */}
+                {/* Period Range - Start Period */}
                 <div>
                   <label className="block text-sm font-medium mb-1 flex items-center gap-1"><Clock size={14} /> From</label>
                   <select name="startPeriod" value={formData.startPeriod} onChange={handleInputChange} className="w-full p-2 border rounded-md">
@@ -325,12 +347,12 @@ const App = () => {
                   </select>
                 </div>
                 
-                {/* 範圍選擇 - End Period */}
+                {/* Period Range - End Period */}
                 <div>
                   <label className="block text-sm font-medium mb-1 flex items-center gap-1">To</label>
                   <select name="endPeriod" value={formData.endPeriod} onChange={handleInputChange} className="w-full p-2 border rounded-md">
                     {periodOptions
-                        .filter(p => p >= parseInt(formData.startPeriod)) // 確保結束節次大於等於起始節次
+                        .filter(p => p >= parseInt(formData.startPeriod)) 
                         .map(p => (
                             <option key={`end-${p}`} value={p}>{p}</option>
                         ))}
@@ -368,7 +390,7 @@ const App = () => {
                 </div>
               </div>
               
-              {/* 預覽 */}
+              {/* Preview */}
               <div className="p-4 rounded-lg text-center mt-4 border border-dashed border-slate-300" style={{ backgroundColor: formData.color }}>
                 <span className="font-bold block text-slate-800">{formData.name || 'Course Name'}</span>
                 <span className="text-sm opacity-75 text-slate-800">{formData.type}</span>
@@ -377,24 +399,44 @@ const App = () => {
 
               <button 
                 onClick={handleAddCourse}
-                // 當 Grid 模式開啟時，按鈕文字變為確認
-                className={`w-full py-2 rounded-md flex items-center justify-center gap-2 font-medium transition-colors ${isGridMode ? 'bg-green-600 hover:bg-green-700 text-white' : 'bg-blue-600 hover:bg-blue-700 text-white'}`}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-md flex items-center justify-center gap-2 font-medium transition-colors"
               >
-                <Plus size={20} /> {isGridMode ? 'Confirm Add' : 'Add Course Manually'}
+                <Plus size={20} /> Add to Pool
               </button>
             </div>
           </div>
 
-          {/* 下方：課程列表 */}
+          {/* Course List (The Selection Pool) */}
           <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-            <h2 className="text-xl font-semibold mb-4">Course List ({renderCourseList().length})</h2>
+            <h2 className="text-xl font-semibold mb-4">Selection Pool ({courseGroups.length})</h2>
             <div className="space-y-3 max-h-64 overflow-y-auto">
-              {renderCourseList().length === 0 ? <p className="text-slate-400 text-center">No courses yet.</p> : renderCourseList()}
+              {courseGroups.length === 0 ? <p className="text-slate-400 text-center">No courses in pool.</p> : null}
+              {courseGroups.map(group => (
+                <div key={`${group.groupId}-${group.day}`} className="flex items-center justify-between p-3 rounded-lg border border-slate-100 hover:shadow-md transition-shadow bg-white">
+                  <div className="flex items-center gap-3">
+                    <button 
+                        onClick={() => handleToggleSchedule(group.groupId, group.day, !group.selected)}
+                        className={`text-2xl p-1 rounded-sm ${group.selected ? 'text-green-600' : 'text-slate-400'}`}
+                        title={group.selected ? 'Unschedule' : 'Schedule'}
+                    >
+                        {group.selected ? <CheckSquare size={24} /> : <Square size={24} />}
+                    </button>
+                    <div className="w-2 h-10 rounded-full" style={{ backgroundColor: group.color }}></div>
+                    <div>
+                      <div className="font-bold">{group.name}</div>
+                      <div className="text-xs text-slate-500">{group.day} - P. {group.periodDisplay} ({group.type})</div>
+                    </div>
+                  </div>
+                  <button onClick={() => deleteCourseGroup(group.groupId, group.day)} className="text-red-400 hover:text-red-600 p-2">
+                    <Trash2 size={18} />
+                  </button>
+                </div>
+              ))}
             </div>
           </div>
         </div>
 
-        {/* 右側：課表網格 */}
+        {/* Right: Schedule Grid */}
         <div className="lg:col-span-8">
           <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 overflow-hidden">
             <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
@@ -421,7 +463,6 @@ const App = () => {
                             className="border p-1 h-24 align-top relative cursor-pointer hover:bg-blue-50 transition-colors"
                             onClick={() => handleGridClick(day, period)}
                         >
-                            {/* 渲染課程內容，只在每個課程的第一格渲染 */}
                             {renderCell(day, period)}
                         </td>
                       ))}
