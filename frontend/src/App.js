@@ -1,510 +1,262 @@
-import React, { useState, useEffect } from 'react';
-import { courseApi } from './services/api';
-import CourseInput from './components/CourseInput';
-import ConflictModal from './components/ConflictModal';
-import './App.css';
+import React, { useState } from 'react';
+import { Plus, Trash2, Edit2, BookOpen, Clock, Calendar } from 'lucide-react';
+import ConflictModal from './components/ConflictModal'; // 引入剛剛的 Modal
 
-function App() {
-  const [courses, setCourses] = useState([]);
-  const [selectedCourses, setSelectedCourses] = useState([]);
-  const [editingCourse, setEditingCourse] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [conflictData, setConflictData] = useState(null);
-  const [pendingSelection, setPendingSelection] = useState(null);
+const App = () => {
+  // 1. 狀態管理
+  const [courses, setCourses] = useState([]); // 存放所有課程
+  const [formData, setFormData] = useState({
+    name: '',
+    day: 'Monday',
+    period: '1',
+    type: 'Major',
+    color: '#a5b4fc' // 預設顏色
+  });
 
-  const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
-  const periods = Array.from({ length: 10 }, (_, i) => (i + 1).toString());
+  // 衝堂處理用的狀態
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [conflictMessage, setConflictMessage] = useState('');
+  const [pendingCourse, setPendingCourse] = useState(null); // 暫存要加入的課程
 
-  useEffect(() => {
-    fetchCourses();
-  }, []);
+  // 預設顏色盤
+  const colorPalette = [
+    '#fca5a5', '#fdba74', '#fcd34d', '#86efac', 
+    '#93c5fd', '#a5b4fc', '#d8b4fe', '#f0abfc'
+  ];
 
-  const fetchCourses = async () => {
-    try {
-      setLoading(true);
-      const response = await courseApi.getCourses();
-      setCourses(response.data || []);
-    } catch (error) {
-      console.error('Failed to fetch courses:', error);
-      alert('Cannot connect to server. Please ensure backend is running.');
-    } finally {
-      setLoading(false);
-    }
+  // 處理輸入變更
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
   };
 
-  const handleAddCourse = async (courseData) => {
-    try {
-      if (editingCourse) {
-        await courseApi.updateCourse(courseData.id, {
-          name: courseData.name,
-          time: courseData.time,
-          type: courseData.type,
-          color: courseData.color
-        });
-      } else {
-        await courseApi.addCourse({
-          name: courseData.name,
-          time: courseData.time,
-          type: courseData.type,
-          color: courseData.color
-        });
-      }
-      setEditingCourse(null);
-      fetchCourses();
-    } catch (error) {
-      console.error('Failed to save course:', error);
-      alert('Failed to save course');
-    }
-  };
+  // 2. 核心邏輯：新增課程 (含衝堂檢查)
+  const handleAddCourse = () => {
+    if (!formData.name) return alert("請輸入課程名稱");
 
-  const handleDeleteCourse = async (id) => {
-    if (window.confirm('Are you sure you want to delete this course?')) {
-      try {
-        await courseApi.deleteCourse(id);
-        setSelectedCourses(selectedCourses.filter(sc => sc !== id));
-        fetchCourses();
-      } catch (error) {
-        console.error('Failed to delete course:', error);
-        alert('Failed to delete course');
-      }
-    }
-  };
-
-  // Check for time conflicts
-  const checkConflict = async (courseId) => {
-    const course = courses.find(c => c.id === courseId);
-    if (!course) return { hasConflict: false, conflicts: [] };
-
-    try {
-      const response = await courseApi.checkConflict(course.time);
-      const conflictingCourses = response.data.conflicts.filter(c => 
-        c.id !== courseId && selectedCourses.includes(c.id)
-      );
-      
-      return {
-        hasConflict: conflictingCourses.length > 0,
-        conflicts: conflictingCourses
-      };
-    } catch (error) {
-      console.error('Failed to check conflict:', error);
-      return { hasConflict: false, conflicts: [] };
-    }
-  };
-
-  // Handle course selection/deselection
-  const toggleCourse = async (courseId) => {
-    const isCurrentlySelected = selectedCourses.includes(courseId);
-    
-    if (isCurrentlySelected) {
-      // Deselect - remove directly
-      setSelectedCourses(prev => prev.filter(id => id !== courseId));
-    } else {
-      // Select - check for conflicts
-      const { hasConflict, conflicts } = await checkConflict(courseId);
-      
-      if (hasConflict) {
-        // Show conflict warning modal
-        setConflictData({ conflicts });
-        setPendingSelection(courseId);
-      } else {
-        // No conflict - add directly
-        setSelectedCourses(prev => [...prev, courseId]);
-      }
-    }
-  };
-
-  // Confirm and override conflicting courses
-  const handleConfirmConflict = () => {
-    if (pendingSelection && conflictData) {
-      // Remove all conflicting courses
-      const conflictIds = conflictData.conflicts.map(c => c.id);
-      setSelectedCourses(prev => {
-        const filtered = prev.filter(id => !conflictIds.includes(id));
-        return [...filtered, pendingSelection];
-      });
-      
-      // Close modal
-      setConflictData(null);
-      setPendingSelection(null);
-    }
-  };
-
-  // Cancel selection
-  const handleCancelConflict = () => {
-    setConflictData(null);
-    setPendingSelection(null);
-  };
-
-  const parseTime = (timeStr) => {
-    const day = parseInt(timeStr[0]) - 1;
-    const periodArray = timeStr.slice(1).split('').map(Number);
-    return { day, periods: periodArray };
-  };
-
-  const getCourseForSlot = (day, period) => {
-    return courses.find(course => {
-      if (!selectedCourses.includes(course.id)) return false;
-      const { day: courseDay, periods: coursePeriods } = parseTime(course.time);
-      return courseDay === day && coursePeriods.includes(period);
-    });
-  };
-
-  // Get course type display name
-  const getCourseTypeName = (type) => {
-    const typeNames = {
-      'general': 'General',
-      'required': 'Required',
-      'elective': 'Elective',
-      'major': 'Major',
-      'minor': 'Minor',
-      'lab': 'Lab'
+    const newCourse = {
+      id: Date.now(), // 產生唯一 ID
+      ...formData,
+      period: parseInt(formData.period) // 確保節次是數字
     };
-    return typeNames[type] || type;
+
+    // 檢查是否衝堂
+    const existingCourse = courses.find(
+      c => c.day === newCourse.day && c.period === newCourse.period
+    );
+
+    if (existingCourse) {
+      // 如果有衝堂，設定訊息並打開 Modal
+      setConflictMessage(`「${existingCourse.day} 第 ${existingCourse.period} 節」已經有課程：${existingCourse.name}。是否覆蓋？`);
+      setPendingCourse(newCourse);
+      setIsModalOpen(true);
+    } else {
+      // 沒衝堂，直接加入
+      setCourses([...courses, newCourse]);
+    }
   };
 
-  if (loading) {
-    return (
-      <div style={{ 
-        minHeight: '100vh', 
-        display: 'flex', 
-        alignItems: 'center', 
-        justifyContent: 'center',
-        backgroundColor: '#eff6fc'
-      }}>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: '48px', marginBottom: '16px' }}>?</div>
-          <p style={{ fontSize: '18px', color: '#6b7280' }}>Loading...</p>
+  // 確認覆蓋 (Modal 的 Confirm 按鈕)
+  const confirmOverride = () => {
+    if (pendingCourse) {
+      // 移除舊的 (相同時間的)，加入新的
+      const filteredCourses = courses.filter(
+        c => !(c.day === pendingCourse.day && c.period === pendingCourse.period)
+      );
+      setCourses([...filteredCourses, pendingCourse]);
+      
+      // 重置狀態
+      setIsModalOpen(false);
+      setPendingCourse(null);
+    }
+  };
+
+  // 刪除課程
+  const deleteCourse = (id) => {
+    setCourses(courses.filter(c => c.id !== id));
+  };
+
+  // 3. 渲染課表格子 (這裡修復了顏色顯示問題)
+  const renderCell = (day, period) => {
+    const course = courses.find(c => c.day === day && c.period === period);
+
+    if (course) {
+      return (
+        <div 
+          className="h-full w-full p-2 rounded-md shadow-sm text-sm flex flex-col justify-center items-center text-center"
+          style={{ backgroundColor: course.color, color: '#333' }} // ★ 關鍵：這裡應用顏色
+        >
+          <span className="font-bold block">{course.name}</span>
+          <span className="text-xs opacity-75">{course.type}</span>
         </div>
-      </div>
-    );
-  }
+      );
+    }
+    return null;
+  };
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#eff6fc', padding: '32px' }}>
-      <div style={{ maxWidth: '1280px', margin: '0 auto' }}>
-        <h1 style={{ 
-          fontSize: '36px', 
-          fontWeight: 'bold', 
-          color: '#1f2937', 
-          marginBottom: '8px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '12px'
-        }}>
-          <span>?</span>
-          Course Management System
+    <div className="min-h-screen bg-slate-50 p-8 font-sans text-slate-800">
+      {/* 衝堂警示視窗 */}
+      <ConflictModal 
+        isOpen={isModalOpen} 
+        message={conflictMessage} 
+        onConfirm={confirmOverride} 
+        onCancel={() => setIsModalOpen(false)} 
+      />
+
+      <header className="mb-8">
+        <h1 className="text-3xl font-bold text-slate-800 flex items-center gap-2">
+          <BookOpen className="text-blue-600" /> Course Management System
         </h1>
-        <p style={{ color: '#6b7280', marginBottom: '32px', fontSize: '14px' }}>
-          Manage your courses easily with conflict detection and custom colors
-        </p>
+        <p className="text-slate-500">Manage your courses easily with conflict detection and custom colors</p>
+      </header>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '32px' }}>
-          {/* Left: Course Input & List */}
-          <div style={{ 
-            maxHeight: '800px', 
-            overflow: 'auto', 
-            backgroundColor: 'white', 
-            borderRadius: '12px', 
-            boxShadow: '0 10px 15px rgba(0,0,0,0.1)', 
-            padding: '24px' 
-          }}>
-            <CourseInput 
-              onAddCourse={handleAddCourse}
-              editingCourse={editingCourse}
-              onCancelEdit={() => setEditingCourse(null)}
-            />
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        {/* 左側：控制面板 */}
+        <div className="lg:col-span-4 space-y-6">
+          <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+            <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+              <Edit2 size={20} /> Add New Course
+            </h2>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">Course Name</label>
+                <input 
+                  type="text" 
+                  name="name" 
+                  value={formData.name}
+                  onChange={handleInputChange}
+                  className="w-full p-2 border rounded-md" 
+                  placeholder="Ex: Linear Algebra" 
+                />
+              </div>
 
-            <div style={{ borderTop: '1px solid #d1d5db', paddingTop: '24px', marginTop: '24px' }}>
-              <h3 style={{ 
-                fontSize: '18px', 
-                fontWeight: 'bold', 
-                color: '#1f2937', 
-                marginBottom: '16px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px'
-              }}>
-                <span>?</span>
-                Course List
-                <span style={{
-                  backgroundColor: '#3b82f6',
-                  color: 'white',
-                  fontSize: '12px',
-                  padding: '2px 8px',
-                  borderRadius: '12px',
-                  fontWeight: '600'
-                }}>
-                  {courses.length}
-                </span>
-              </h3>
-              
-              {courses.length === 0 ? (
-                <div style={{
-                  textAlign: 'center',
-                  padding: '40px 20px',
-                  color: '#9ca3af'
-                }}>
-                  <p style={{ fontSize: '48px', marginBottom: '8px' }}>?</p>
-                  <p style={{ fontSize: '14px' }}>No courses yet</p>
-                  <p style={{ fontSize: '12px', marginTop: '4px' }}>Add a course using the form above</p>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Day</label>
+                  <select name="day" value={formData.day} onChange={handleInputChange} className="w-full p-2 border rounded-md">
+                    {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'].map(d => (
+                      <option key={d} value={d}>{d}</option>
+                    ))}
+                  </select>
                 </div>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  {courses.map(course => (
-                    <div
-                      key={course.id}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '12px',
-                        padding: '14px',
-                        backgroundColor: '#f9fafb',
-                        borderRadius: '8px',
-                        border: selectedCourses.includes(course.id) ? '2px solid #3b82f6' : '1px solid #e5e7eb',
-                        transition: 'all 0.2s'
-                      }}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={selectedCourses.includes(course.id)}
-                        onChange={() => toggleCourse(course.id)}
-                        style={{ 
-                          width: '20px', 
-                          height: '20px', 
-                          cursor: 'pointer',
-                          accentColor: '#3b82f6'
-                        }}
-                      />
-                      <div 
-                        style={{ 
-                          width: '8px', 
-                          height: '48px', 
-                          borderRadius: '4px',
-                          backgroundColor: course.color || '#a5b4fc',
-                          flexShrink: 0
-                        }}
-                      />
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <p style={{ 
-                          fontWeight: '600', 
-                          color: '#1f2937',
-                          marginBottom: '4px',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap'
-                        }}>
-                          {course.name}
-                        </p>
-                        <div style={{ 
-                          display: 'flex', 
-                          gap: '8px', 
-                          alignItems: 'center',
-                          flexWrap: 'wrap'
-                        }}>
-                          <span style={{ 
-                            fontSize: '11px', 
-                            color: 'white',
-                            backgroundColor: '#6b7280',
-                            padding: '2px 6px',
-                            borderRadius: '4px',
-                            fontWeight: '500'
-                          }}>
-                            {course.time}
-                          </span>
-                          <span style={{ 
-                            fontSize: '11px', 
-                            color: '#3b82f6',
-                            backgroundColor: '#eff6ff',
-                            padding: '2px 6px',
-                            borderRadius: '4px',
-                            fontWeight: '500'
-                          }}>
-                            {getCourseTypeName(course.type)}
-                          </span>
-                        </div>
-                      </div>
-                      <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
-                        <button
-                          onClick={() => setEditingCourse(course)}
-                          style={{
-                            padding: '6px 12px',
-                            color: '#3b82f6',
-                            backgroundColor: '#eff6ff',
-                            fontWeight: '600',
-                            fontSize: '12px',
-                            border: 'none',
-                            borderRadius: '6px',
-                            cursor: 'pointer',
-                            transition: 'all 0.2s'
-                          }}
-                          onMouseOver={(e) => e.target.style.backgroundColor = '#dbeafe'}
-                          onMouseOut={(e) => e.target.style.backgroundColor = '#eff6ff'}
-                        >
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => handleDeleteCourse(course.id)}
-                          style={{
-                            padding: '6px 12px',
-                            color: '#ef4444',
-                            backgroundColor: '#fef2f2',
-                            fontWeight: '600',
-                            fontSize: '12px',
-                            border: 'none',
-                            borderRadius: '6px',
-                            cursor: 'pointer',
-                            transition: 'all 0.2s'
-                          }}
-                          onMouseOver={(e) => e.target.style.backgroundColor = '#fee2e2'}
-                          onMouseOut={(e) => e.target.style.backgroundColor = '#fef2f2'}
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Period</label>
+                  <select name="period" value={formData.period} onChange={handleInputChange} className="w-full p-2 border rounded-md">
+                    {[1, 2, 3, 4, 5, 6, 7, 8].map(p => (
+                      <option key={p} value={p}>{p}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">Type</label>
+                <input type="text" name="type" value={formData.type} onChange={handleInputChange} className="w-full p-2 border rounded-md" placeholder="Major, Elective..." />
+              </div>
+
+              {/* 顏色選擇器 */}
+              <div>
+                <label className="block text-sm font-medium mb-2">Color</label>
+                <div className="flex flex-wrap gap-2 mb-2">
+                  {colorPalette.map(color => (
+                    <button
+                      key={color}
+                      onClick={() => setFormData({ ...formData, color })}
+                      className={`w-8 h-8 rounded-full border-2 ${formData.color === color ? 'border-slate-600' : 'border-transparent'}`}
+                      style={{ backgroundColor: color }}
+                    />
                   ))}
                 </div>
-              )}
+                <div className="flex items-center gap-2">
+                  <input 
+                    type="color" 
+                    name="color" 
+                    value={formData.color} 
+                    onChange={handleInputChange} 
+                    className="h-8 w-12 p-0 border-0" 
+                  />
+                  <span className="text-xs text-slate-500">{formData.color}</span>
+                </div>
+              </div>
+
+              {/* 預覽 */}
+              <div className="p-4 rounded-lg text-center mt-4" style={{ backgroundColor: formData.color }}>
+                <span className="font-bold block text-slate-800">{formData.name || 'Course Name'}</span>
+                <span className="text-sm opacity-75 text-slate-800">{formData.type}</span>
+              </div>
+
+              <button 
+                onClick={handleAddCourse}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-md flex items-center justify-center gap-2 font-medium transition-colors"
+              >
+                <Plus size={20} /> Add Course
+              </button>
             </div>
           </div>
 
-          {/* Right: Schedule Table */}
-          <div style={{ 
-            backgroundColor: 'white', 
-            borderRadius: '12px', 
-            boxShadow: '0 10px 15px rgba(0,0,0,0.1)', 
-            padding: '24px', 
-            overflowX: 'auto' 
-          }}>
-            <h2 style={{ 
-              fontSize: '24px', 
-              fontWeight: 'bold', 
-              color: '#1f2937', 
-              marginBottom: '8px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px'
-            }}>
-              <span>?</span>
-              My Schedule
-            </h2>
-            <p style={{ color: '#6b7280', marginBottom: '24px', fontSize: '13px' }}>
-              {selectedCourses.length} courses selected
-            </p>
-            
-            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '600px' }}>
-              <thead>
-                <tr>
-                  <th style={{ 
-                    border: '1px solid #d1d5db', 
-                    backgroundColor: '#f9fafb', 
-                    padding: '12px', 
-                    fontWeight: 'bold', 
-                    width: '60px',
-                    fontSize: '13px'
-                  }}>
-                    Period
-                  </th>
-                  {daysOfWeek.map((day, idx) => (
-                    <th
-                      key={idx}
-                      style={{
-                        border: '1px solid #d1d5db',
-                        backgroundColor: '#3b82f6',
-                        color: 'white',
-                        padding: '12px',
-                        fontWeight: 'bold',
-                        width: '140px',
-                        fontSize: '14px'
-                      }}
-                    >
-                      {day}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {periods.map(period => (
-                  <tr key={period}>
-                    <td style={{ 
-                      border: '1px solid #d1d5db', 
-                      backgroundColor: '#f9fafb', 
-                      padding: '12px', 
-                      fontWeight: 'bold', 
-                      textAlign: 'center',
-                      fontSize: '13px'
-                    }}>
-                      {period}
-                    </td>
-                    {daysOfWeek.map((_, dayIdx) => {
-                      const course = getCourseForSlot(dayIdx, parseInt(period));
-                      return (
-                        <td
-                          key={`${dayIdx}-${period}`}
-                          style={{
-                            border: '1px solid #d1d5db',
-                            backgroundColor: course ? course.color : 'white',
-                            padding: '12px',
-                            textAlign: 'center',
-                            fontWeight: '600',
-                            color: '#1f2937',
-                            height: '70px',
-                            verticalAlign: 'middle'
-                          }}
-                        >
-                          {course && (
-                            <div>
-                              <div style={{ fontSize: '13px', marginBottom: '4px' }}>
-                                {course.name}
-                              </div>
-                              <div style={{ 
-                                fontSize: '10px', 
-                                color: '#4b5563',
-                                fontWeight: '500'
-                              }}>
-                                {getCourseTypeName(course.type)}
-                              </div>
-                            </div>
-                          )}
-                        </td>
-                      );
-                    })}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-
-            {selectedCourses.length === 0 && (
-              <div style={{ 
-                marginTop: '32px', 
-                padding: '40px', 
-                backgroundColor: '#f9fafb', 
-                borderRadius: '8px', 
-                textAlign: 'center' 
-              }}>
-                <p style={{ fontSize: '48px', marginBottom: '12px' }}>?</p>
-                <p style={{ color: '#6b7280', fontSize: '16px', marginBottom: '8px' }}>
-                  No courses selected
-                </p>
-                <p style={{ color: '#9ca3af', fontSize: '13px' }}>
-                  Check courses on the left to add them to your schedule
-                </p>
-              </div>
-            )}
+          {/* 下方：課程列表 */}
+          <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+            <h2 className="text-xl font-semibold mb-4">Course List ({courses.length})</h2>
+            <div className="space-y-3 max-h-64 overflow-y-auto">
+              {courses.length === 0 ? <p className="text-slate-400 text-center">No courses yet.</p> : null}
+              {courses.map(course => (
+                <div key={course.id} className="flex items-center justify-between p-3 rounded-lg border border-slate-100 hover:shadow-md transition-shadow bg-white">
+                  <div className="flex items-center gap-3">
+                    <div className="w-3 h-10 rounded-full" style={{ backgroundColor: course.color }}></div>
+                    <div>
+                      <div className="font-bold">{course.name}</div>
+                      <div className="text-xs text-slate-500">{course.day} - Period {course.period}</div>
+                    </div>
+                  </div>
+                  <button onClick={() => deleteCourse(course.id)} className="text-red-400 hover:text-red-600 p-2">
+                    <Trash2 size={18} />
+                  </button>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Conflict Warning Modal */}
-      {conflictData && (
-        <ConflictModal
-          conflicts={conflictData.conflicts}
-          onConfirm={handleConfirmConflict}
-          onCancel={handleCancelConflict}
-        />
-      )}
+        {/* 右側：課表網格 */}
+        <div className="lg:col-span-8">
+          <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+            <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+              <Calendar size={20} /> My Schedule
+            </h2>
+            
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse min-w-[600px]">
+                <thead>
+                  <tr>
+                    <th className="border p-3 bg-slate-50 w-16">Period</th>
+                    {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'].map(day => (
+                      <th key={day} className="border p-3 bg-blue-600 text-white w-1/5">{day}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {[1, 2, 3, 4, 5, 6, 7, 8].map(period => (
+                    <tr key={period}>
+                      <td className="border p-3 text-center font-bold text-slate-500 bg-slate-50">{period}</td>
+                      {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'].map(day => (
+                        <td key={`${day}-${period}`} className="border p-1 h-24 align-top relative hover:bg-slate-50 transition-colors">
+                          {renderCell(day, period)}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+      </div>
     </div>
   );
-}
+};
 
 export default App;
