@@ -294,7 +294,7 @@ const App = () => {
         
         {/* Left: Control Panel */}
         <div className="lg:col-span-4 space-y-6">
-          <div className="bg-white p-6 rounded-xl shadow-sm border border-stone-200">
+          <div className="bg-yellow-100 p-6 rounded-xl shadow-sm border border-yellow-200">
             <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
               <Edit2 size={20} /> Add New Course to Pool
             </h2>
@@ -420,12 +420,12 @@ const App = () => {
           </div>
 
           {/* Course List */}
-          <div className="bg-white p-6 rounded-xl shadow-sm border border-stone-200">
+          <div className="bg-yellow-100 p-6 rounded-xl shadow-sm border border-yellow-200">
             <h2 className="text-xl font-semibold mb-4">Selection Pool ({courseGroups.length})</h2>
             <div className="space-y-3 max-h-64 overflow-y-auto">
               {courseGroups.length === 0 ? <p className="text-stone-400 text-center">No courses in pool.</p> : null}
               {courseGroups.map(group => (
-                <div key={`${group.groupId}-${group.day}`} className="flex items-center justify-between p-3 rounded-lg border border-stone-100 hover:shadow-md transition-shadow bg-white">
+                <div key={`${group.groupId}-${group.day}`} className="flex items-center justify-between p-3 rounded-lg border border-yellow-200 hover:shadow-md transition-shadow bg-yellow-50">
                   <div className="flex items-center gap-3">
                     <button 
                         onClick={() => handleToggleSchedule(group.groupId, group.day, !group.selected)}
@@ -451,7 +451,7 @@ const App = () => {
 
         {/* Right: Schedule Grid */}
         <div className="lg:col-span-8">
-          <div className="bg-white p-6 rounded-xl shadow-sm border border-stone-200 overflow-hidden">
+          <div className="bg-yellow-100 p-6 rounded-xl shadow-sm border border-yellow-200 overflow-hidden">
             <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
               <Calendar size={20} /> My Schedule
             </h2>
