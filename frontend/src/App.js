@@ -307,13 +307,13 @@ const App = () => {
               <div className='p-3 rounded-lg text-sm font-medium transition-all bg-blue-100 text-blue-800 border border-blue-200'>
                 {isGridMode ? (
                     <div className='flex items-center justify-between'>
-                        {/* 修復：問號改為打勾 */}
-                        <span>? Time selected! Enter details and click **"Add to Pool"**.</span>
+                        {/* ✅ Green Check */}
+                        <span>{'\u2705'} Time selected! Enter details and click **"Add to Pool"**.</span>
                         <X size={18} className='cursor-pointer' onClick={() => setIsGridMode(false)} />
                     </div>
                 ) : (
-                    /* 修復：問號改為燈泡 */
-                    <span>? **Click an empty cell** on the schedule to pre-fill the time.</span>
+                    /* 💡 Bulb */
+                    <span>{'\u{1F4A1}'} **Click an empty cell** on the schedule to pre-fill the time.</span>
                 )}
               </div>
 
