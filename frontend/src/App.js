@@ -2,8 +2,18 @@ import React, { useState, useMemo } from 'react';
 import { Plus, Trash2, Edit2, BookOpen, Calendar, Clock, X, CheckSquare, Square } from 'lucide-react';
 import ConflictModal from './components/ConflictModal';
 
+// 1. 將課程類型與圖示定義在外面，方便重複使用
+const COURSE_TYPES = [
+  { label: 'General', value: 'General', icon: '\u{1F4D6}' },   // 📖
+  { label: 'Required', value: 'Required', icon: '\u2B50' },    // ⭐
+  { label: 'Elective', value: 'Elective', icon: '\u{1F3A8}' }, // 🎨
+  { label: 'Major', value: 'Major', icon: '\u{1F3AF}' },       // 🎯
+  { label: 'Minor', value: 'Minor', icon: '\u{1F331}' },       // 🌱
+  { label: 'Lab', value: 'Lab', icon: '\u{1F9EA}' }            // 🧪
+];
+
 const App = () => {
-  // Helper function to format period range (e.g., [1, 2, 3] -> "1-3")
+  // Helper function to format period range
   const formatPeriodRange = (periods) => {
     if (periods.length === 0) return '';
     const isContinuous = periods[periods.length - 1] === periods[0] + periods.length - 1;
@@ -14,10 +24,10 @@ const App = () => {
     }
   };
     
-  // 1. Core State: The central pool of all courses (potential or scheduled)
+  // Core State
   const [coursePool, setCoursePool] = useState([]); 
 
-  // Form data for new course
+  // Form data
   const [formData, setFormData] = useState({
     name: '',
     day: 'Monday',
@@ -41,13 +51,13 @@ const App = () => {
     '#93c5fd', '#a5b4fc', '#d8b4fe', '#f0abfc'
   ];
 
-  // Memoized list of currently scheduled courses (filtered from the pool)
+  // Memoized list of currently scheduled courses
   const scheduledCourses = useMemo(() => 
     coursePool.filter(c => c.selected), 
     [coursePool]
   );
   
-  // Memoized list of unique course groups for the list view
+  // Memoized list of unique course groups
   const courseGroups = useMemo(() => {
     const groups = {};
     coursePool.forEach(course => {
@@ -80,7 +90,7 @@ const App = () => {
     setFormData({ ...formData, [name]: value });
   };
   
-  // 3. Create Course Objects (Handles Multiple Periods and adds Group ID)
+  // Create Course Objects
   const createCourseObjects = (groupId) => {
     if (!formData.name) return [];
     
@@ -107,22 +117,19 @@ const App = () => {
     return newCourses;
   };
 
-  // 4. Add Course to POOL (NOT Schedule)
+  // Add Course to POOL
   const handleAddCourse = () => {
     const groupId = Date.now();
     const newCourses = createCourseObjects(groupId);
     if (newCourses.length === 0) return;
 
-    // Add to pool, default selected: false
     setCoursePool(prev => [...prev, ...newCourses.map(c => ({...c, selected: false}))]);
     setIsGridMode(false); 
     setFormData(prev => ({...prev, name: '', type: 'Major'})); 
   };
   
-  // 5. Handle Toggle Schedule (The Checkbox Click - CONFLICT CHECK POINT)
+  // Handle Toggle Schedule
   const handleToggleSchedule = (targetGroupId, targetDay, isSelecting) => {
-    
-    // 1. Deselecting: Simple update and return
     if (!isSelecting) {
         setCoursePool(prev => prev.map(c => 
             c.groupId === targetGroupId && c.day === targetDay ? {...c, selected: false} : c
@@ -130,22 +137,19 @@ const App = () => {
         return;
     }
 
-    // 2. Selecting: Check Conflicts
+    // Check Conflicts
     const coursesToSchedule = coursePool.filter(c => c.groupId === targetGroupId && c.day === targetDay);
     const conflicts = [];
     
-    // Check against all other currently scheduled courses (excluding the one being toggled)
     scheduledCourses.forEach(sc => {
         coursesToSchedule.forEach(newC => {
             if (sc.day === newC.day && sc.period === newC.period) {
-                // Conflict found
                 conflicts.push({ newCourse: newC, existingCourse: sc });
             }
         });
     });
 
     if (conflicts.length > 0) {
-        // Show Modal, store pending action
         const conflictDetails = conflicts.map(c => 
             `${c.newCourse.day} Period ${c.newCourse.period} (Conflicting with: ${c.existingCourse.name})`
         );
@@ -156,36 +160,29 @@ const App = () => {
         setPendingGroup(coursesToSchedule);
         setIsModalOpen(true);
     } else {
-        // No conflict, schedule directly
         setCoursePool(prev => prev.map(c => 
             c.groupId === targetGroupId && c.day === targetDay ? {...c, selected: true} : c
         ));
     }
   };
 
-  // 6. Confirm Overwrite (Modal Confirm Button)
+  // Confirm Overwrite
   const confirmOverride = () => {
     if (!pendingGroup || pendingGroup.length === 0) return;
 
     let newPool = [...coursePool];
     const targetGroupId = pendingGroup[0].groupId;
-    
-    // 找出所有與 pendingGroup 衝突的現有課程群組 ID
     const conflictingGroupIds = new Set();
     
     pendingGroup.forEach(pendingC => {
-        // 尋找在該時段且目前已選中的衝突課程
         const conflictingCourse = scheduledCourses.find(
             c => c.day === pendingC.day && c.period === pendingC.period && c.groupId !== targetGroupId
         );
-        
         if (conflictingCourse) {
-            // 將整個衝突課程的群組 ID 記錄下來
             conflictingGroupIds.add(conflictingCourse.groupId);
         }
     });
 
-    // 1. 將所有衝突的課程群組標記為 deselected (整組移除)
     if (conflictingGroupIds.size > 0) {
         newPool = newPool.map(c => {
             if (conflictingGroupIds.has(c.groupId) && c.day === pendingGroup[0].day) {
@@ -195,32 +192,29 @@ const App = () => {
         });
     }
 
-    // 2. 選中 pending course group (加入新的課程群組)
     newPool = newPool.map(c => 
         c.groupId === targetGroupId ? {...c, selected: true} : c
     );
         
     setCoursePool(newPool);
-    // Reset state
     setIsModalOpen(false);
     setPendingGroup(null);
   };
   
-  // 7. Delete logic for list (Deletes all periods of a specific group)
+  // Delete Course Group
   const deleteCourseGroup = (targetGroupId, targetDay) => {
     if (window.confirm(`Are you sure you want to delete the course "${courseGroups.find(g => g.groupId === targetGroupId && g.day === targetDay)?.name}" on ${targetDay}?`)) {
         setCoursePool(prevCourses => prevCourses.filter(c => c.groupId !== targetGroupId || c.day !== targetDay));
     }
   };
 
-  // 8. Handle Grid Click (Now only for deletion/interaction with SCHEDULED courses)
+  // Handle Grid Click
   const handleGridClick = (day, period) => {
     const existingCourse = scheduledCourses.find(c => c.day === day && c.period === period);
     
     if (existingCourse) {
         deleteCourseGroup(existingCourse.groupId, existingCourse.day);
     } else {
-        // If empty cell is clicked, pre-fill form data for quick add
         setIsGridMode(true);
         setFormData(prev => ({
             ...prev,
@@ -231,20 +225,20 @@ const App = () => {
     }
   };
 
-
-  // 9. Render Schedule Cells 
+  // Render Schedule Cells (修改這裡：加入圖示顯示)
   const renderCell = (day, period) => {
     const course = scheduledCourses.find(c => c.day === day && c.period === period);
 
     if (course) {
-      // Find the group's duration and start period using the scheduled courses
       const courseGroup = scheduledCourses.filter(c => c.groupId === course.groupId && c.day === course.day);
       const minPeriod = Math.min(...courseGroup.map(c => c.period));
       const duration = courseGroup.length;
-      
       const isStart = period === minPeriod;
 
       if (!isStart) return null;
+
+      // 取得對應的圖示
+      const typeIcon = COURSE_TYPES.find(t => t.value === course.type)?.icon || '';
 
       return (
         <div 
@@ -260,7 +254,13 @@ const App = () => {
           }}
         >
           <span className="font-bold block text-sm">{course.name}</span>
-          <span className="text-xs opacity-75">{course.type}</span>
+          
+          {/* 在這裡顯示 Type 和 Icon */}
+          <div className="text-xs opacity-75 flex items-center justify-center gap-1 mt-1">
+            <span>{typeIcon}</span>
+            <span>{course.type}</span>
+          </div>
+
           <Trash2 size={12} className="mt-1 text-red-500 hover:text-red-700 opacity-80" />
         </div>
       );
@@ -301,16 +301,14 @@ const App = () => {
             
             <div className="space-y-4">
               
-              {/* Grid Interaction Tip (Updated with Unicode Escapes) */}
+              {/* Grid Interaction Tip */}
               <div className='p-3 rounded-lg text-sm font-medium transition-all bg-blue-100 text-blue-800 border border-blue-200'>
                 {isGridMode ? (
                     <div className='flex items-center justify-between'>
-                        {/* \u2705 = Check Mark Button */}
                         <span>{'\u2705'} Time selected! Enter details and click **"Add to Pool"**.</span>
                         <X size={18} className='cursor-pointer' onClick={() => setIsGridMode(false)} />
                     </div>
                 ) : (
-                    /* \u{1F4A1} = Electric Light Bulb */
                     <span>{'\u{1F4A1}'} **Click an empty cell** on the schedule to pre-fill the time.</span>
                 )}
               </div>
@@ -337,7 +335,7 @@ const App = () => {
                   </select>
                 </div>
                 
-                {/* Period Range - Start Period */}
+                {/* Period Range */}
                 <div>
                   <label className="block text-sm font-medium mb-1 flex items-center gap-1"><Clock size={14} /> From</label>
                   <select name="startPeriod" value={formData.startPeriod} onChange={handleInputChange} className="w-full p-2 border rounded-md">
@@ -347,7 +345,6 @@ const App = () => {
                   </select>
                 </div>
                 
-                {/* Period Range - End Period */}
                 <div>
                   <label className="block text-sm font-medium mb-1 flex items-center gap-1">To</label>
                   <select name="endPeriod" value={formData.endPeriod} onChange={handleInputChange} className="w-full p-2 border rounded-md">
@@ -360,18 +357,11 @@ const App = () => {
                 </div>
               </div>
 
-              {/* Type Selection (Replaced Input with Button Grid using Unicode) */}
+              {/* Type Selection (改用共用的 COURSE_TYPES 陣列) */}
               <div>
                 <label className="block text-sm font-medium mb-2">Type</label>
                 <div className="grid grid-cols-3 gap-2">
-                  {[
-                    { label: 'General', value: 'General', icon: '\u{1F4D6}' },   // 📖
-                    { label: 'Required', value: 'Required', icon: '\u2B50' },    // ⭐
-                    { label: 'Elective', value: 'Elective', icon: '\u{1F3A8}' }, // 🎨
-                    { label: 'Major', value: 'Major', icon: '\u{1F3AF}' },       // 🎯
-                    { label: 'Minor', value: 'Minor', icon: '\u{1F331}' },       // 🌱
-                    { label: 'Lab', value: 'Lab', icon: '\u{1F9EA}' }            // 🧪
-                  ].map((typeOption) => (
+                  {COURSE_TYPES.map((typeOption) => (
                     <button
                       key={typeOption.value}
                       onClick={() => setFormData({ ...formData, type: typeOption.value })}
@@ -429,7 +419,7 @@ const App = () => {
             </div>
           </div>
 
-          {/* Course List (The Selection Pool) */}
+          {/* Course List */}
           <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
             <h2 className="text-xl font-semibold mb-4">Selection Pool ({courseGroups.length})</h2>
             <div className="space-y-3 max-h-64 overflow-y-auto">
