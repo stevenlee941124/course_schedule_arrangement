@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { Plus, Trash2, Edit2, BookOpen, Calendar, Clock, X, CheckSquare, Square } from 'lucide-react';
 import ConflictModal from './components/ConflictModal';
 
@@ -45,6 +45,10 @@ const App = () => {
   // Grid Interaction State
   const [isGridMode, setIsGridMode] = useState(false); 
 
+  // --- 新增：拖曳選取相關狀態 ---
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState(null); // 格式: { day: string, period: number }
+
   // Default Color Palette
   const colorPalette = [
     '#fca5a5', '#fdba74', '#fcd34d', '#86efac', 
@@ -82,6 +86,18 @@ const App = () => {
     });
     return Object.values(groups);
   }, [coursePool]);
+
+  // --- 新增：監聽全域 MouseUp 以結束拖曳 (防止滑鼠移出表格後放開卡住) ---
+  useEffect(() => {
+    const handleGlobalMouseUp = () => {
+      if (isDragging) {
+        setIsDragging(false);
+        setDragStart(null);
+      }
+    };
+    window.addEventListener('mouseup', handleGlobalMouseUp);
+    return () => window.removeEventListener('mouseup', handleGlobalMouseUp);
+  }, [isDragging]);
 
 
   // Handle Input Changes
@@ -208,21 +224,41 @@ const App = () => {
     }
   };
 
-  // Handle Grid Click
-  const handleGridClick = (day, period) => {
+  // --- 新增：滑鼠按下事件 (開始選取) ---
+  const handleMouseDown = (day, period) => {
+    // 如果該格子已經有課，就不觸發選取 (刪除邏輯由 renderCell 內的 onClick 處理)
     const existingCourse = scheduledCourses.find(c => c.day === day && c.period === period);
+    if (existingCourse) return;
+
+    setIsDragging(true);
+    setDragStart({ day, period });
+    setIsGridMode(true);
     
-    if (existingCourse) {
-        deleteCourseGroup(existingCourse.groupId, existingCourse.day);
-    } else {
-        setIsGridMode(true);
-        setFormData(prev => ({
-            ...prev,
-            day: day,
-            startPeriod: String(period),
-            endPeriod: String(period)
-        }));
-    }
+    // 設定初始選擇
+    setFormData(prev => ({
+        ...prev,
+        day: day,
+        startPeriod: String(period),
+        endPeriod: String(period)
+    }));
+  };
+
+  // --- 新增：滑鼠移動事件 (拖曳中更新範圍) ---
+  const handleMouseEnter = (day, period) => {
+    if (!isDragging || !dragStart) return;
+
+    // 限制只能在同一天拖曳
+    if (day !== dragStart.day) return;
+
+    const start = Math.min(dragStart.period, period);
+    const end = Math.max(dragStart.period, period);
+
+    setFormData(prev => ({
+        ...prev,
+        day: day, // 確保天數一致
+        startPeriod: String(start),
+        endPeriod: String(end)
+    }));
   };
 
   // Render Schedule Cells
@@ -237,7 +273,6 @@ const App = () => {
 
       if (!isStart) return null;
 
-      // 取得對應的圖示
       const typeIcon = COURSE_TYPES.find(t => t.value === course.type)?.icon || '';
 
       return (
@@ -250,12 +285,12 @@ const App = () => {
           className={`absolute inset-0 w-full p-2 rounded-md shadow-sm text-sm flex flex-col justify-center items-center text-center cursor-pointer`}
           onClick={(e) => {
             e.stopPropagation(); 
-            handleGridClick(day, period);
+            deleteCourseGroup(course.groupId, course.day); // 點擊已有課程則刪除
           }}
+          onMouseDown={(e) => e.stopPropagation()} // 防止點擊課程時觸發底下的選取事件
         >
           <span className="font-bold block text-sm">{course.name}</span>
           
-          {/* 在這裡顯示 Type 和 Icon */}
           <div className="text-xs opacity-75 flex items-center justify-center gap-1 mt-1">
             <span>{typeIcon}</span>
             <span>{course.type}</span>
@@ -271,7 +306,7 @@ const App = () => {
   const periodOptions = [1, 2, 3, 4, 5, 6, 7, 8];
 
   return (
-    // 修改：大背景改為 bg-yellow-100 (更深的米黃色)
+    // 背景色 bg-yellow-100
     <div className="min-h-screen bg-yellow-100 p-8 font-sans text-stone-800">
       {/* Conflict Modal */}
       <ConflictModal 
@@ -295,7 +330,6 @@ const App = () => {
         
         {/* Left: Control Panel */}
         <div className="lg:col-span-4 space-y-6">
-          {/* 修改：內部區塊背景改為 bg-yellow-200，邊框 border-yellow-300 */}
           <div className="bg-yellow-200 p-6 rounded-xl shadow-sm border border-yellow-300">
             <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
               <Edit2 size={20} /> Add New Course to Pool
@@ -311,7 +345,7 @@ const App = () => {
                         <X size={18} className='cursor-pointer' onClick={() => setIsGridMode(false)} />
                     </div>
                 ) : (
-                    <span>{'\u{1F4A1}'} **Click an empty cell** on the schedule to pre-fill the time.</span>
+                    <span>{'\u{1F4A1}'} **Drag** to select multiple periods.</span>
                 )}
               </div>
 
@@ -422,7 +456,6 @@ const App = () => {
           </div>
 
           {/* Course List */}
-          {/* 修改：內部區塊背景改為 bg-yellow-200，邊框 border-yellow-300 */}
           <div className="bg-yellow-200 p-6 rounded-xl shadow-sm border border-yellow-300">
             <h2 className="text-xl font-semibold mb-4">Selection Pool ({courseGroups.length})</h2>
             <div className="space-y-3 max-h-64 overflow-y-auto">
@@ -454,14 +487,13 @@ const App = () => {
 
         {/* Right: Schedule Grid */}
         <div className="lg:col-span-8">
-          {/* 修改：內部區塊背景改為 bg-yellow-200，邊框 border-yellow-300 */}
           <div className="bg-yellow-200 p-6 rounded-xl shadow-sm border border-yellow-300 overflow-hidden">
             <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
               <Calendar size={20} /> My Schedule
             </h2>
             
             <div className="overflow-x-auto">
-              <table className="w-full border-collapse min-w-[600px] relative">
+              <table className="w-full border-collapse min-w-[600px] relative" onMouseLeave={() => { setIsDragging(false); setDragStart(null); }}>
                 <thead>
                   <tr>
                     <th className="border border-stone-400 p-3 bg-stone-100 w-16 sticky top-0 z-10">Period</th>
@@ -477,8 +509,15 @@ const App = () => {
                       {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'].map(day => (
                         <td 
                             key={`${day}-${period}`} 
-                            className="border border-stone-400 p-1 h-24 align-top relative cursor-pointer hover:bg-blue-50 transition-colors bg-white"
-                            onClick={() => handleGridClick(day, period)}
+                            className={`border border-stone-400 p-1 h-24 align-top relative cursor-pointer transition-colors select-none ${
+                                isDragging && dragStart && dragStart.day === day && 
+                                period >= Math.min(dragStart.period, parseInt(formData.endPeriod)) && 
+                                period <= Math.max(dragStart.period, parseInt(formData.endPeriod))
+                                ? 'bg-blue-100' 
+                                : 'hover:bg-blue-50 bg-white'
+                            }`}
+                            onMouseDown={() => handleMouseDown(day, period)}
+                            onMouseEnter={() => handleMouseEnter(day, period)}
                         >
                             {renderCell(day, period)}
                         </td>
