@@ -271,8 +271,7 @@ const App = () => {
   const periodOptions = [1, 2, 3, 4, 5, 6, 7, 8];
 
   return (
-    // 修改 1：背景改為 bg-slate-100 (原本是 bg-slate-50)
-    <div className="min-h-screen bg-slate-100 p-8 font-sans text-slate-800">
+    <div className="min-h-screen bg-stone-100 p-8 font-sans text-stone-800">
       {/* Conflict Modal */}
       <ConflictModal 
         isOpen={isModalOpen} 
@@ -285,17 +284,17 @@ const App = () => {
       />
 
       <header className="mb-8">
-        <h1 className="text-3xl font-bold text-slate-800 flex items-center gap-2">
+        <h1 className="text-3xl font-bold text-stone-800 flex items-center gap-2">
           <BookOpen className="text-blue-600" /> Course Management System
         </h1>
-        <p className="text-slate-500">Manage your courses easily with selection, conflict detection and custom colors</p>
+        <p className="text-stone-500">Manage your courses easily with selection, conflict detection and custom colors</p>
       </header>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         
         {/* Left: Control Panel */}
         <div className="lg:col-span-4 space-y-6">
-          <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+          <div className="bg-white p-6 rounded-xl shadow-sm border border-stone-200">
             <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
               <Edit2 size={20} /> Add New Course to Pool
             </h2>
@@ -369,7 +368,7 @@ const App = () => {
                       className={`p-2 rounded-md border text-xs flex items-center justify-center gap-1 transition-all ${
                         formData.type === typeOption.value
                           ? 'bg-blue-100 border-blue-500 text-blue-700 font-bold'
-                          : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                          : 'bg-white border-stone-200 text-stone-600 hover:bg-stone-50'
                       }`}
                     >
                       <span>{typeOption.icon}</span>
@@ -387,7 +386,7 @@ const App = () => {
                     <button
                       key={color}
                       onClick={() => setFormData({ ...formData, color })}
-                      className={`w-8 h-8 rounded-full border-2 ${formData.color === color ? 'border-slate-600 ring-2 ring-offset-2 ring-slate-400' : 'border-transparent'}`}
+                      className={`w-8 h-8 rounded-full border-2 ${formData.color === color ? 'border-stone-600 ring-2 ring-offset-2 ring-stone-400' : 'border-transparent'}`}
                       style={{ backgroundColor: color }}
                     />
                   ))}
@@ -400,15 +399,15 @@ const App = () => {
                     onChange={handleInputChange} 
                     className="h-8 w-12 p-0 border-0" 
                   />
-                  <span className="text-xs text-slate-500">{formData.color}</span>
+                  <span className="text-xs text-stone-500">{formData.color}</span>
                 </div>
               </div>
               
               {/* Preview */}
-              <div className="p-4 rounded-lg text-center mt-4 border border-dashed border-slate-300" style={{ backgroundColor: formData.color }}>
-                <span className="font-bold block text-slate-800">{formData.name || 'Course Name'}</span>
-                <span className="text-sm opacity-75 text-slate-800">{formData.type}</span>
-                <span className="text-xs opacity-75 text-slate-800 block mt-1">{formData.day} P.{formData.startPeriod}-{formData.endPeriod}</span>
+              <div className="p-4 rounded-lg text-center mt-4 border border-dashed border-stone-300" style={{ backgroundColor: formData.color }}>
+                <span className="font-bold block text-stone-800">{formData.name || 'Course Name'}</span>
+                <span className="text-sm opacity-75 text-stone-800">{formData.type}</span>
+                <span className="text-xs opacity-75 text-stone-800 block mt-1">{formData.day} P.{formData.startPeriod}-{formData.endPeriod}</span>
               </div>
 
               <button 
@@ -421,16 +420,16 @@ const App = () => {
           </div>
 
           {/* Course List */}
-          <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+          <div className="bg-white p-6 rounded-xl shadow-sm border border-stone-200">
             <h2 className="text-xl font-semibold mb-4">Selection Pool ({courseGroups.length})</h2>
             <div className="space-y-3 max-h-64 overflow-y-auto">
-              {courseGroups.length === 0 ? <p className="text-slate-400 text-center">No courses in pool.</p> : null}
+              {courseGroups.length === 0 ? <p className="text-stone-400 text-center">No courses in pool.</p> : null}
               {courseGroups.map(group => (
-                <div key={`${group.groupId}-${group.day}`} className="flex items-center justify-between p-3 rounded-lg border border-slate-100 hover:shadow-md transition-shadow bg-white">
+                <div key={`${group.groupId}-${group.day}`} className="flex items-center justify-between p-3 rounded-lg border border-stone-100 hover:shadow-md transition-shadow bg-white">
                   <div className="flex items-center gap-3">
                     <button 
                         onClick={() => handleToggleSchedule(group.groupId, group.day, !group.selected)}
-                        className={`text-2xl p-1 rounded-sm ${group.selected ? 'text-green-600' : 'text-slate-400'}`}
+                        className={`text-2xl p-1 rounded-sm ${group.selected ? 'text-green-600' : 'text-stone-400'}`}
                         title={group.selected ? 'Unschedule' : 'Schedule'}
                     >
                         {group.selected ? <CheckSquare size={24} /> : <Square size={24} />}
@@ -438,7 +437,7 @@ const App = () => {
                     <div className="w-2 h-10 rounded-full" style={{ backgroundColor: group.color }}></div>
                     <div>
                       <div className="font-bold">{group.name}</div>
-                      <div className="text-xs text-slate-500">{group.day} - P. {group.periodDisplay} ({group.type})</div>
+                      <div className="text-xs text-stone-500">{group.day} - P. {group.periodDisplay} ({group.type})</div>
                     </div>
                   </div>
                   <button onClick={() => deleteCourseGroup(group.groupId, group.day)} className="text-red-400 hover:text-red-600 p-2">
@@ -452,7 +451,7 @@ const App = () => {
 
         {/* Right: Schedule Grid */}
         <div className="lg:col-span-8">
-          <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+          <div className="bg-white p-6 rounded-xl shadow-sm border border-stone-200 overflow-hidden">
             <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
               <Calendar size={20} /> My Schedule
             </h2>
@@ -461,23 +460,20 @@ const App = () => {
               <table className="w-full border-collapse min-w-[600px] relative">
                 <thead>
                   <tr>
-                    {/* 修改 2：將 border 改為 border-slate-300 */}
-                    <th className="border border-slate-300 p-3 bg-slate-50 w-16 sticky top-0 z-10">Period</th>
+                    <th className="border border-stone-300 p-3 bg-stone-50 w-16 sticky top-0 z-10">Period</th>
                     {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'].map(day => (
-                      <th key={day} className="border border-slate-300 p-3 bg-blue-600 text-white w-1/5 sticky top-0 z-10">{day}</th>
+                      <th key={day} className="border border-stone-300 p-3 bg-blue-600 text-white w-1/5 sticky top-0 z-10">{day}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody className="relative">
                   {[1, 2, 3, 4, 5, 6, 7, 8].map(period => (
                     <tr key={period} className='h-24'>
-                      {/* 修改 2：將 border 改為 border-slate-300 */}
-                      <td className="border border-slate-300 p-3 text-center font-bold text-slate-500 bg-slate-50 h-full align-middle">{period}</td>
+                      <td className="border border-stone-300 p-3 text-center font-bold text-stone-500 bg-stone-50 h-full align-middle">{period}</td>
                       {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'].map(day => (
                         <td 
                             key={`${day}-${period}`} 
-                            // 修改 2：將 border 改為 border-slate-300
-                            className="border border-slate-300 p-1 h-24 align-top relative cursor-pointer hover:bg-blue-50 transition-colors"
+                            className="border border-stone-300 p-1 h-24 align-top relative cursor-pointer hover:bg-blue-50 transition-colors"
                             onClick={() => handleGridClick(day, period)}
                         >
                             {renderCell(day, period)}
