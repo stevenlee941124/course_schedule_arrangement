@@ -225,7 +225,7 @@ const App = () => {
     }
   };
 
-  // Render Schedule Cells (修改這裡：加入圖示顯示)
+  // Render Schedule Cells
   const renderCell = (day, period) => {
     const course = scheduledCourses.find(c => c.day === day && c.period === period);
 
@@ -271,7 +271,8 @@ const App = () => {
   const periodOptions = [1, 2, 3, 4, 5, 6, 7, 8];
 
   return (
-    <div className="min-h-screen bg-slate-50 p-8 font-sans text-slate-800">
+    // 修改 1：背景改為 bg-slate-100 (原本是 bg-slate-50)
+    <div className="min-h-screen bg-slate-100 p-8 font-sans text-slate-800">
       {/* Conflict Modal */}
       <ConflictModal 
         isOpen={isModalOpen} 
@@ -357,7 +358,7 @@ const App = () => {
                 </div>
               </div>
 
-              {/* Type Selection (改用共用的 COURSE_TYPES 陣列) */}
+              {/* Type Selection */}
               <div>
                 <label className="block text-sm font-medium mb-2">Type</label>
                 <div className="grid grid-cols-3 gap-2">
@@ -460,20 +461,23 @@ const App = () => {
               <table className="w-full border-collapse min-w-[600px] relative">
                 <thead>
                   <tr>
-                    <th className="border p-3 bg-slate-50 w-16 sticky top-0 z-10">Period</th>
+                    {/* 修改 2：將 border 改為 border-slate-300 */}
+                    <th className="border border-slate-300 p-3 bg-slate-50 w-16 sticky top-0 z-10">Period</th>
                     {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'].map(day => (
-                      <th key={day} className="border p-3 bg-blue-600 text-white w-1/5 sticky top-0 z-10">{day}</th>
+                      <th key={day} className="border border-slate-300 p-3 bg-blue-600 text-white w-1/5 sticky top-0 z-10">{day}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody className="relative">
                   {[1, 2, 3, 4, 5, 6, 7, 8].map(period => (
                     <tr key={period} className='h-24'>
-                      <td className="border p-3 text-center font-bold text-slate-500 bg-slate-50 h-full align-middle">{period}</td>
+                      {/* 修改 2：將 border 改為 border-slate-300 */}
+                      <td className="border border-slate-300 p-3 text-center font-bold text-slate-500 bg-slate-50 h-full align-middle">{period}</td>
                       {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'].map(day => (
                         <td 
                             key={`${day}-${period}`} 
-                            className="border p-1 h-24 align-top relative cursor-pointer hover:bg-blue-50 transition-colors"
+                            // 修改 2：將 border 改為 border-slate-300
+                            className="border border-slate-300 p-1 h-24 align-top relative cursor-pointer hover:bg-blue-50 transition-colors"
                             onClick={() => handleGridClick(day, period)}
                         >
                             {renderCell(day, period)}
