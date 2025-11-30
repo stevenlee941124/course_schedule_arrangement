@@ -4,7 +4,6 @@ import ConflictModal from './components/ConflictModal';
 
 const App = () => {
   // Helper function to format period range (e.g., [1, 2, 3] -> "1-3")
-  // *** 必須先宣告，才能在 useMemo 內使用 ***
   const formatPeriodRange = (periods) => {
     if (periods.length === 0) return '';
     const isContinuous = periods[periods.length - 1] === periods[0] + periods.length - 1;
@@ -69,7 +68,6 @@ const App = () => {
     // Sort periods and format range display
     Object.values(groups).forEach(group => {
         group.periods.sort((a, b) => a - b);
-        // 現在 formatPeriodRange 已經在 useMemo 之前被宣告了，所以可以正常存取
         group.periodDisplay = formatPeriodRange(group.periods); 
     });
     return Object.values(groups);
@@ -303,16 +301,16 @@ const App = () => {
             
             <div className="space-y-4">
               
-              {/* Grid Interaction Tip */}
+              {/* Grid Interaction Tip (Updated with Unicode Escapes) */}
               <div className='p-3 rounded-lg text-sm font-medium transition-all bg-blue-100 text-blue-800 border border-blue-200'>
                 {isGridMode ? (
                     <div className='flex items-center justify-between'>
-                        {/* ✅ Green Check */}
+                        {/* \u2705 = Check Mark Button */}
                         <span>{'\u2705'} Time selected! Enter details and click **"Add to Pool"**.</span>
                         <X size={18} className='cursor-pointer' onClick={() => setIsGridMode(false)} />
                     </div>
                 ) : (
-                    /* 💡 Bulb */
+                    /* \u{1F4A1} = Electric Light Bulb */
                     <span>{'\u{1F4A1}'} **Click an empty cell** on the schedule to pre-fill the time.</span>
                 )}
               </div>
@@ -362,9 +360,32 @@ const App = () => {
                 </div>
               </div>
 
+              {/* Type Selection (Replaced Input with Button Grid using Unicode) */}
               <div>
-                <label className="block text-sm font-medium mb-1">Type</label>
-                <input type="text" name="type" value={formData.type} onChange={handleInputChange} className="w-full p-2 border rounded-md" placeholder="Major, Elective..." />
+                <label className="block text-sm font-medium mb-2">Type</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { label: 'General', value: 'General', icon: '\u{1F4D6}' },   // 📖
+                    { label: 'Required', value: 'Required', icon: '\u2B50' },    // ⭐
+                    { label: 'Elective', value: 'Elective', icon: '\u{1F3A8}' }, // 🎨
+                    { label: 'Major', value: 'Major', icon: '\u{1F3AF}' },       // 🎯
+                    { label: 'Minor', value: 'Minor', icon: '\u{1F331}' },       // 🌱
+                    { label: 'Lab', value: 'Lab', icon: '\u{1F9EA}' }            // 🧪
+                  ].map((typeOption) => (
+                    <button
+                      key={typeOption.value}
+                      onClick={() => setFormData({ ...formData, type: typeOption.value })}
+                      className={`p-2 rounded-md border text-xs flex items-center justify-center gap-1 transition-all ${
+                        formData.type === typeOption.value
+                          ? 'bg-blue-100 border-blue-500 text-blue-700 font-bold'
+                          : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                      }`}
+                    >
+                      <span>{typeOption.icon}</span>
+                      <span>{typeOption.label}</span>
+                    </button>
+                  ))}
+                </div>
               </div>
 
               {/* Color Picker */}
