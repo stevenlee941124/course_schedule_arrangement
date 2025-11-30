@@ -271,7 +271,7 @@ const App = () => {
   const periodOptions = [1, 2, 3, 4, 5, 6, 7, 8];
 
   return (
-    <div className="min-h-screen bg-stone-100 p-8 font-sans text-stone-800">
+    <div className="min-h-screen bg-yellow-50 p-8 font-sans text-stone-800">
       {/* Conflict Modal */}
       <ConflictModal 
         isOpen={isModalOpen} 
