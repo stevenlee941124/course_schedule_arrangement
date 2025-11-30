@@ -271,7 +271,8 @@ const App = () => {
   const periodOptions = [1, 2, 3, 4, 5, 6, 7, 8];
 
   return (
-    <div className="min-h-screen bg-yellow-50 p-8 font-sans text-stone-800">
+    // 修改：大背景改為 bg-yellow-100 (更深的米黃色)
+    <div className="min-h-screen bg-yellow-100 p-8 font-sans text-stone-800">
       {/* Conflict Modal */}
       <ConflictModal 
         isOpen={isModalOpen} 
@@ -294,7 +295,8 @@ const App = () => {
         
         {/* Left: Control Panel */}
         <div className="lg:col-span-4 space-y-6">
-          <div className="bg-yellow-100 p-6 rounded-xl shadow-sm border border-yellow-200">
+          {/* 修改：內部區塊背景改為 bg-yellow-200，邊框 border-yellow-300 */}
+          <div className="bg-yellow-200 p-6 rounded-xl shadow-sm border border-yellow-300">
             <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
               <Edit2 size={20} /> Add New Course to Pool
             </h2>
@@ -404,7 +406,7 @@ const App = () => {
               </div>
               
               {/* Preview */}
-              <div className="p-4 rounded-lg text-center mt-4 border border-dashed border-stone-300" style={{ backgroundColor: formData.color }}>
+              <div className="p-4 rounded-lg text-center mt-4 border border-dashed border-stone-400" style={{ backgroundColor: formData.color }}>
                 <span className="font-bold block text-stone-800">{formData.name || 'Course Name'}</span>
                 <span className="text-sm opacity-75 text-stone-800">{formData.type}</span>
                 <span className="text-xs opacity-75 text-stone-800 block mt-1">{formData.day} P.{formData.startPeriod}-{formData.endPeriod}</span>
@@ -420,12 +422,13 @@ const App = () => {
           </div>
 
           {/* Course List */}
-          <div className="bg-yellow-100 p-6 rounded-xl shadow-sm border border-yellow-200">
+          {/* 修改：內部區塊背景改為 bg-yellow-200，邊框 border-yellow-300 */}
+          <div className="bg-yellow-200 p-6 rounded-xl shadow-sm border border-yellow-300">
             <h2 className="text-xl font-semibold mb-4">Selection Pool ({courseGroups.length})</h2>
             <div className="space-y-3 max-h-64 overflow-y-auto">
-              {courseGroups.length === 0 ? <p className="text-stone-400 text-center">No courses in pool.</p> : null}
+              {courseGroups.length === 0 ? <p className="text-stone-500 text-center">No courses in pool.</p> : null}
               {courseGroups.map(group => (
-                <div key={`${group.groupId}-${group.day}`} className="flex items-center justify-between p-3 rounded-lg border border-yellow-200 hover:shadow-md transition-shadow bg-yellow-50">
+                <div key={`${group.groupId}-${group.day}`} className="flex items-center justify-between p-3 rounded-lg border border-stone-200 hover:shadow-md transition-shadow bg-white">
                   <div className="flex items-center gap-3">
                     <button 
                         onClick={() => handleToggleSchedule(group.groupId, group.day, !group.selected)}
@@ -451,7 +454,8 @@ const App = () => {
 
         {/* Right: Schedule Grid */}
         <div className="lg:col-span-8">
-          <div className="bg-yellow-100 p-6 rounded-xl shadow-sm border border-yellow-200 overflow-hidden">
+          {/* 修改：內部區塊背景改為 bg-yellow-200，邊框 border-yellow-300 */}
+          <div className="bg-yellow-200 p-6 rounded-xl shadow-sm border border-yellow-300 overflow-hidden">
             <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
               <Calendar size={20} /> My Schedule
             </h2>
@@ -460,20 +464,20 @@ const App = () => {
               <table className="w-full border-collapse min-w-[600px] relative">
                 <thead>
                   <tr>
-                    <th className="border border-stone-300 p-3 bg-stone-50 w-16 sticky top-0 z-10">Period</th>
+                    <th className="border border-stone-400 p-3 bg-stone-100 w-16 sticky top-0 z-10">Period</th>
                     {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'].map(day => (
-                      <th key={day} className="border border-stone-300 p-3 bg-blue-600 text-white w-1/5 sticky top-0 z-10">{day}</th>
+                      <th key={day} className="border border-stone-400 p-3 bg-blue-600 text-white w-1/5 sticky top-0 z-10">{day}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody className="relative">
                   {[1, 2, 3, 4, 5, 6, 7, 8].map(period => (
                     <tr key={period} className='h-24'>
-                      <td className="border border-stone-300 p-3 text-center font-bold text-stone-500 bg-stone-50 h-full align-middle">{period}</td>
+                      <td className="border border-stone-400 p-3 text-center font-bold text-stone-600 bg-stone-100 h-full align-middle">{period}</td>
                       {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'].map(day => (
                         <td 
                             key={`${day}-${period}`} 
-                            className="border border-stone-300 p-1 h-24 align-top relative cursor-pointer hover:bg-blue-50 transition-colors"
+                            className="border border-stone-400 p-1 h-24 align-top relative cursor-pointer hover:bg-blue-50 transition-colors bg-white"
                             onClick={() => handleGridClick(day, period)}
                         >
                             {renderCell(day, period)}
