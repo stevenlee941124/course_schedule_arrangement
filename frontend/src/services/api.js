@@ -7,19 +7,19 @@ const api = axios.create({
 });
 
 export const courseApi = {
-  // ·s¼W½Òµ{
+  // æ–°å¢žèª²ç¨‹
   addCourse: (courseData) => api.post('/courses', courseData),
 
-  // ¨ú±o©Ò¦³½Òµ{
+  // å–å¾—æ‰€æœ‰èª²ç¨‹
   getCourses: () => api.get('/courses'),
 
-  // §ó·s½Òµ{
+  // æ›´æ–°èª²ç¨‹
   updateCourse: (id, courseData) => api.put(`/courses/${id}`, courseData),
 
-  // §R°£½Òµ{
+  // åˆªé™¤èª²ç¨‹
   deleteCourse: (id) => api.delete(`/courses/${id}`),
 
-  // ÀË¬d®É¶¡½Ä¬ð¡]·s¼W¡^
+  // æª¢æŸ¥æ™‚é–“è¡çªï¼ˆæ–°å¢žï¼‰
   checkConflict: (time, excludeCourseId = null) => {
     const params = { time };
     if (excludeCourseId) {

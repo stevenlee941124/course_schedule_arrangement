@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>½Òµ{ºŞ²z¨t²Î</title>
+    <title>èª²ç¨‹ç®¡ç†ç³»çµ±</title>
     <style>
         body {
             font-family: "Microsoft JhengHei", Arial, sans-serif;
@@ -12,7 +12,7 @@
         }
         h1, h4 { text-align: center; }
         
-        /* ªí®æ¼Ë¦¡ */
+        /* è¡¨æ ¼æ¨£å¼ */
         table {
             width: 100%;
             border-collapse: collapse;
@@ -24,12 +24,12 @@
             border: 1px solid #ddd;
             padding: 15px;
             text-align: center;
-            width: 18%; /* ¥­§¡¤À°t¼e«× */
+            width: 18%; /* å¹³å‡åˆ†é…å¯¬åº¦ */
             height: 60px;
         }
         th { background-color: #4CAF50; color: white; }
         
-        /* ±±¨î°Ï¶ô¼Ë¦¡ */
+        /* æ§åˆ¶å€å¡Šæ¨£å¼ */
         .control-panel {
             max-width: 600px;
             margin: 0 auto;
@@ -52,7 +52,7 @@
         }
         button:hover { background-color: #45a049; }
 
-        /* Ãş«¬³]©w°Ï¶ô */
+        /* é¡å‹è¨­å®šå€å¡Š */
         .type-settings {
             border: 2px dashed #ddd;
             padding: 10px;
@@ -63,58 +63,58 @@
 </head>
 <body>
 
-    <h1>§Úªº½Òµ{ªí</h1>
+    <h1>æˆ‘çš„èª²ç¨‹è¡¨</h1>
 
     <div class="control-panel">
         <div class="type-settings">
-            <h4>1. ³]©w½Òµ{Ãş«¬»PÃC¦â</h4>
+            <h4>1. è¨­å®šèª²ç¨‹é¡å‹èˆ‡é¡è‰²</h4>
             <div class="input-group">
-                <label>Ãş«¬¦WºÙ:</label>
-                <input type="text" id="newTypeName" placeholder="¨Ò: ¥²­×">
+                <label>é¡å‹åç¨±:</label>
+                <input type="text" id="newTypeName" placeholder="ä¾‹: å¿…ä¿®">
                 <input type="color" id="newTypeColor" value="#ffcccc">
-                <button onclick="addNewType()">·s¼WÃş«¬</button>
+                <button onclick="addNewType()">æ–°å¢é¡å‹</button>
             </div>
         </div>
 
         <hr>
 
         <div>
-            <h4>2. ¥[¤J½Òµ{</h4>
+            <h4>2. åŠ å…¥èª²ç¨‹</h4>
             <div class="input-group">
-                <label>½Òµ{¦WºÙ:</label>
-                <input type="text" id="courseName" placeholder="¿é¤J½Ò¦W">
+                <label>èª²ç¨‹åç¨±:</label>
+                <input type="text" id="courseName" placeholder="è¼¸å…¥èª²å">
             </div>
             
             <div class="input-group">
-                <label>®É¶¡:</label>
+                <label>æ™‚é–“:</label>
                 <select id="daySelect">
-                    <option value="Mon">¬P´Á¤@</option>
-                    <option value="Tue">¬P´Á¤G</option>
-                    <option value="Wed">¬P´Á¤T</option>
-                    <option value="Thu">¬P´Á¥|</option>
-                    <option value="Fri">¬P´Á¤­</option>
+                    <option value="Mon">æ˜ŸæœŸä¸€</option>
+                    <option value="Tue">æ˜ŸæœŸäºŒ</option>
+                    <option value="Wed">æ˜ŸæœŸä¸‰</option>
+                    <option value="Thu">æ˜ŸæœŸå››</option>
+                    <option value="Fri">æ˜ŸæœŸäº”</option>
                 </select>
                 <select id="periodSelect">
-                    <option value="1">²Ä 1 ¸`</option>
-                    <option value="2">²Ä 2 ¸`</option>
-                    <option value="3">²Ä 3 ¸`</option>
-                    <option value="4">²Ä 4 ¸`</option>
-                    <option value="5">²Ä 5 ¸`</option>
-                    <option value="6">²Ä 6 ¸`</option>
-                    <option value="7">²Ä 7 ¸`</option>
-                    <option value="8">²Ä 8 ¸`</option>
+                    <option value="1">ç¬¬ 1 ç¯€</option>
+                    <option value="2">ç¬¬ 2 ç¯€</option>
+                    <option value="3">ç¬¬ 3 ç¯€</option>
+                    <option value="4">ç¬¬ 4 ç¯€</option>
+                    <option value="5">ç¬¬ 5 ç¯€</option>
+                    <option value="6">ç¬¬ 6 ç¯€</option>
+                    <option value="7">ç¬¬ 7 ç¯€</option>
+                    <option value="8">ç¬¬ 8 ç¯€</option>
                 </select>
             </div>
 
             <div class="input-group">
-                <label>Ãş«¬:</label>
+                <label>é¡å‹:</label>
                 <select id="courseTypeSelect">
-                    <option value="">½Ğ¥ı·s¼W¨Ã¿ï¾ÜÃş«¬</option>
+                    <option value="">è«‹å…ˆæ–°å¢ä¸¦é¸æ“‡é¡å‹</option>
                 </select>
             </div>
 
             <div style="text-align: center; margin-top: 10px;">
-                <button onclick="addCourse()" style="width: 100%; background-color: #2196F3;">½T»{¥[¤J½Òªí</button>
+                <button onclick="addCourse()" style="width: 100%; background-color: #2196F3;">ç¢ºèªåŠ å…¥èª²è¡¨</button>
             </div>
         </div>
     </div>
@@ -122,12 +122,12 @@
     <table>
         <thead>
             <tr>
-                <th>¸`¦¸</th>
-                <th>¬P´Á¤@</th>
-                <th>¬P´Á¤G</th>
-                <th>¬P´Á¤T</th>
-                <th>¬P´Á¥|</th>
-                <th>¬P´Á¤­</th>
+                <th>ç¯€æ¬¡</th>
+                <th>æ˜ŸæœŸä¸€</th>
+                <th>æ˜ŸæœŸäºŒ</th>
+                <th>æ˜ŸæœŸä¸‰</th>
+                <th>æ˜ŸæœŸå››</th>
+                <th>æ˜ŸæœŸäº”</th>
             </tr>
         </thead>
         <tbody id="scheduleBody">

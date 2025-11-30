@@ -1,7 +1,7 @@
 {
   "name": "course-system-backend",
   "version": "1.0.0",
-  "description": "�ҵ{�޲z�t�Ϋ��",
+  "description": "嚙課程嚙豬理嚙緣嚙諄恬蕭嚙�",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

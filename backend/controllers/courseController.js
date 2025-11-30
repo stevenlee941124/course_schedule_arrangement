@@ -1,13 +1,13 @@
 const db = require('../models/db');
 const { v4: uuidv4 } = require('uuid');
 
-// ·s¼W½Òµ{
+// æ–°å¢žèª²ç¨‹
 exports.addCourse = (req, res) => {
   const { name, time } = req.body;
   
-  // ÅçÃÒ¿é¤J
+  // é©—è­‰è¼¸å…¥
   if (!name || !time) {
-    return res.status(400).json({ error: '½Òµ{¦WºÙ©M®É¶¡¤£¯à¬°ªÅ' });
+    return res.status(400).json({ error: 'èª²ç¨‹åç¨±å’Œæ™‚é–“ä¸èƒ½ç‚ºç©º' });
   }
 
   const id = uuidv4();
@@ -25,7 +25,7 @@ exports.addCourse = (req, res) => {
   );
 };
 
-// ¨ú±o©Ò¦³½Òµ{
+// å–å¾—æ‰€æœ‰èª²ç¨‹
 exports.getCourses = (req, res) => {
   db.all('SELECT * FROM courses', (err, rows) => {
     if (err) {
@@ -36,13 +36,13 @@ exports.getCourses = (req, res) => {
   });
 };
 
-// §ó·s½Òµ{
+// æ›´æ–°èª²ç¨‹
 exports.updateCourse = (req, res) => {
   const { id } = req.params;
   const { name, time } = req.body;
 
   if (!name || !time) {
-    return res.status(400).json({ error: '½Òµ{¦WºÙ©M®É¶¡¤£¯à¬°ªÅ' });
+    return res.status(400).json({ error: 'èª²ç¨‹åç¨±å’Œæ™‚é–“ä¸èƒ½ç‚ºç©º' });
   }
 
   db.run(
@@ -58,7 +58,7 @@ exports.updateCourse = (req, res) => {
   );
 };
 
-// §R°£½Òµ{
+// åˆªé™¤èª²ç¨‹
 exports.deleteCourse = (req, res) => {
   const { id } = req.params;
 
@@ -66,7 +66,7 @@ exports.deleteCourse = (req, res) => {
     if (err) {
       res.status(500).json({ error: err.message });
     } else {
-      res.json({ message: '½Òµ{¤w§R°£' });
+      res.json({ message: 'èª²ç¨‹å·²åˆªé™¤' });
     }
   });
 };

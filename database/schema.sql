@@ -3,8 +3,8 @@ CREATE TABLE IF NOT EXISTS courses (
   name TEXT NOT NULL,
   time TEXT NOT NULL,
   description TEXT,
-  type TEXT DEFAULT 'general',  -- ·s¼W¡G½Òµ{Ãş«¬ (general, required, elective, major, etc.)
-  color TEXT DEFAULT '#a5b4fc',  -- ·s¼W¡G½Òµ{ÃC¦â
+  type TEXT DEFAULT 'general',  -- æ–°å¢ï¼šèª²ç¨‹é¡å‹ (general, required, elective, major, etc.)
+  color TEXT DEFAULT '#a5b4fc',  -- æ–°å¢ï¼šèª²ç¨‹é¡è‰²
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS selections (
 CREATE INDEX IF NOT EXISTS idx_course_time ON courses(time);
 CREATE INDEX IF NOT EXISTS idx_selection_user ON selections(user_id);
 
--- ¦pªGªí¤w¦s¦b¡A²K¥[·sÄæ¦ì¡]SQLite ªº ALTER TABLE »yªk¡^
--- ª`·N¡G³o¨Ç»y¥y¦bªí¤w¦³·sÄæ¦ì®É·|¥¢±Ñ¡A³o¬O¥¿±`ªº
+-- å¦‚æœè¡¨å·²å­˜åœ¨ï¼Œæ·»åŠ æ–°æ¬„ä½ï¼ˆSQLite çš„ ALTER TABLE èªæ³•ï¼‰
+-- æ³¨æ„ï¼šé€™äº›èªå¥åœ¨è¡¨å·²æœ‰æ–°æ¬„ä½æ™‚æœƒå¤±æ•—ï¼Œé€™æ˜¯æ­£å¸¸çš„
 -- ALTER TABLE courses ADD COLUMN type TEXT DEFAULT 'general';
 -- ALTER TABLE courses ADD COLUMN color TEXT DEFAULT '#a5b4fc';

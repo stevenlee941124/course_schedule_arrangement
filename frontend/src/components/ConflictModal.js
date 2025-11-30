@@ -1,4 +1,4 @@
-// �ɮצ�m: frontend/src/components/ConflictModal.js
+// 檔案位置: frontend/src/components/ConflictModal.js
 import React from 'react';
 
 const ConflictModal = ({ isOpen, message, onConfirm, onCancel }) => {

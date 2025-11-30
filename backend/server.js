@@ -6,24 +6,24 @@ const courseRoutes = require('./routes/courseRoutes');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// ¤¤¶¡¥ó
+// ä¸­é–“ä»¶
 app.use(cors());
 app.use(express.json());
 
-// ¸ô¥Ñ
+// è·¯ç”±
 app.use('/api/courses', courseRoutes);
 
-// °ò¥»¸ô¥Ñ´ú¸Õ
+// åŸºæœ¬è·¯ç”±æ¸¬è©¦
 app.get('/', (req, res) => {
-  res.json({ message: '½Òµ{ºÞ²z¨t²Î«áºÝ¤w±Ò°Ê' });
+  res.json({ message: 'èª²ç¨‹ç®¡ç†ç³»çµ±å¾Œç«¯å·²å•Ÿå‹•' });
 });
 
-// ¿ù»~³B²z
+// éŒ¯èª¤è™•ç†
 app.use((err, req, res, next) => {
   console.error(err.stack);
-  res.status(500).json({ error: '¦øªA¾¹¿ù»~', message: err.message });
+  res.status(500).json({ error: 'ä¼ºæœå™¨éŒ¯èª¤', message: err.message });
 });
 
 app.listen(PORT, () => {
-  console.log(`? ¦øªA¾¹¹B¦æ¦b http://localhost:${PORT}`);
+  console.log(`? ä¼ºæœå™¨é‹è¡Œåœ¨ http://localhost:${PORT}`);
 });

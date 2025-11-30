@@ -1,37 +1,37 @@
-// ©w¸q¥ş°ìÅÜ¼Æ
+// å®šç¾©å…¨åŸŸè®Šæ•¸
 let courseTypes = [
-    { name: "¤@¯ë", color: "#ffffff" }, // ¹w³]¤@­Ó¥Õ¦â­I´º
-    { name: "¥²­×", color: "#ffcccc" },
-    { name: "¿ï­×", color: "#ccffcc" }
+    { name: "ä¸€èˆ¬", color: "#ffffff" }, // é è¨­ä¸€å€‹ç™½è‰²èƒŒæ™¯
+    { name: "å¿…ä¿®", color: "#ffcccc" },
+    { name: "é¸ä¿®", color: "#ccffcc" }
 ];
 
-// 1. ªì©l¤Æ¡G·í­¶­±¸ü¤J§¹¦¨«á°õ¦æ
+// 1. åˆå§‹åŒ–ï¼šç•¶é é¢è¼‰å…¥å®Œæˆå¾ŒåŸ·è¡Œ
 window.onload = function() {
-    generateTable();      // ²£¥Í½Òªí®æ¤l
-    renderTypeOptions();  // ²£¥ÍÃş«¬¿ï³æ
+    generateTable();      // ç”¢ç”Ÿèª²è¡¨æ ¼å­
+    renderTypeOptions();  // ç”¢ç”Ÿé¡å‹é¸å–®
 };
 
-// 2. ¦Û°Ê²£¥Í 1-8 ¸`ªºªí®æ HTML
+// 2. è‡ªå‹•ç”¢ç”Ÿ 1-8 ç¯€çš„è¡¨æ ¼ HTML
 function generateTable() {
     const tbody = document.getElementById("scheduleBody");
-    tbody.innerHTML = ""; // ²MªÅ
+    tbody.innerHTML = ""; // æ¸…ç©º
     const days = ["Mon", "Tue", "Wed", "Thu", "Fri"];
 
     for (let i = 1; i <= 8; i++) {
         let row = document.createElement("tr");
         
-        // ²Ä¤@®æ¡GÅã¥Ü¸`¦¸
+        // ç¬¬ä¸€æ ¼ï¼šé¡¯ç¤ºç¯€æ¬¡
         let periodCell = document.createElement("td");
-        periodCell.innerText = `²Ä ${i} ¸``;
+        periodCell.innerText = `ç¬¬ ${i} ç¯€`;
         periodCell.style.backgroundColor = "#f0f0f0";
         row.appendChild(periodCell);
 
-        // ±µ¤U¨Ó¤­®æ¡G¬P´Á¤@¨ì¤­
+        // æ¥ä¸‹ä¾†äº”æ ¼ï¼šæ˜ŸæœŸä¸€åˆ°äº”
         days.forEach(day => {
             let cell = document.createElement("td");
-            // ³]©w ID ®æ¦¡¬° "Mon_1", "Tue_2" µ¥
+            // è¨­å®š ID æ ¼å¼ç‚º "Mon_1", "Tue_2" ç­‰
             cell.id = `${day}_${i}`;
-            cell.onclick = function() { alert(`³o¬O ${day} ²Ä ${i} ¸``); }; // ÂIÀ»´ú¸Õ¥Î
+            cell.onclick = function() { alert(`é€™æ˜¯ ${day} ç¬¬ ${i} ç¯€`); }; // é»æ“Šæ¸¬è©¦ç”¨
             row.appendChild(cell);
         });
 
@@ -39,10 +39,10 @@ function generateTable() {
     }
 }
 
-// 3. §ó·s¤U©Ô¿ï³æ
+// 3. æ›´æ–°ä¸‹æ‹‰é¸å–®
 function renderTypeOptions() {
     const select = document.getElementById("courseTypeSelect");
-    select.innerHTML = '<option value="">½Ğ¿ï¾ÜÃş«¬</option>';
+    select.innerHTML = '<option value="">è«‹é¸æ“‡é¡å‹</option>';
 
     courseTypes.forEach((type, index) => {
         const option = document.createElement("option");
@@ -53,7 +53,7 @@ function renderTypeOptions() {
     });
 }
 
-// 4. ·s¼WÃş«¬ªº¥\¯à
+// 4. æ–°å¢é¡å‹çš„åŠŸèƒ½
 function addNewType() {
     const nameInput = document.getElementById("newTypeName");
     const colorInput = document.getElementById("newTypeColor");
@@ -61,45 +61,45 @@ function addNewType() {
     const name = nameInput.value.trim();
     const color = colorInput.value;
 
-    if (!name) return alert("½Ğ¿é¤JÃş«¬¦WºÙ");
+    if (!name) return alert("è«‹è¼¸å…¥é¡å‹åç¨±");
 
     courseTypes.push({ name, color });
     renderTypeOptions();
     
-    // ¦Û°Ê¿ï¤¤­è·s¼Wªº¨º­Ó
+    // è‡ªå‹•é¸ä¸­å‰›æ–°å¢çš„é‚£å€‹
     document.getElementById("courseTypeSelect").value = courseTypes.length - 1;
     nameInput.value = "";
 }
 
-// 5. ¥D¥\¯à¡G¥[¤J½Òµ{ (§t½Ä°óÀË¬d)
+// 5. ä¸»åŠŸèƒ½ï¼šåŠ å…¥èª²ç¨‹ (å«è¡å ‚æª¢æŸ¥)
 function addCourse() {
     const name = document.getElementById("courseName").value.trim();
     const day = document.getElementById("daySelect").value;
     const period = document.getElementById("periodSelect").value;
     const typeIndex = document.getElementById("courseTypeSelect").value;
 
-    if (!name) return alert("½Ğ¿é¤J½Òµ{¦WºÙ¡I");
-    if (typeIndex === "") return alert("½Ğ¿ï¾Ü½Òµ{Ãş«¬¡I");
+    if (!name) return alert("è«‹è¼¸å…¥èª²ç¨‹åç¨±ï¼");
+    if (typeIndex === "") return alert("è«‹é¸æ“‡èª²ç¨‹é¡å‹ï¼");
 
-    // ²Õ¦X ID ¨Ó´M§ä®æ¤l
+    // çµ„åˆ ID ä¾†å°‹æ‰¾æ ¼å­
     const cellId = `${day}_${period}`;
     const cell = document.getElementById(cellId);
 
-    if (!cell) return alert("¨t²Î¿ù»~¡G§ä¤£¨ì®æ¤l " + cellId);
+    if (!cell) return alert("ç³»çµ±éŒ¯èª¤ï¼šæ‰¾ä¸åˆ°æ ¼å­ " + cellId);
 
-    // ¨ú±o¿ï¨ìªºÃC¦â
+    // å–å¾—é¸åˆ°çš„é¡è‰²
     const selectedColor = courseTypes[typeIndex].color;
 
-    // ½Ä°óÀË¬d
+    // è¡å ‚æª¢æŸ¥
     if (cell.innerText.trim() !== "") {
         const userCheck = confirm(
-            `¡i½Ä°óÄµ§i¡j\n\n${day} ²Ä ${period} ¸`¤w¸g¦³¡G¡u${cell.innerText}¡v\n\n½T©w­nÂĞ»\¶Ü¡H`
+            `ã€è¡å ‚è­¦å‘Šã€‘\n\n${day} ç¬¬ ${period} ç¯€å·²ç¶“æœ‰ï¼šã€Œ${cell.innerText}ã€\n\nç¢ºå®šè¦è¦†è“‹å—ï¼Ÿ`
         );
-        if (!userCheck) return; // ¦pªG«ö¨ú®ø¡A´Nµ²§ô¨ç¼Æ
+        if (!userCheck) return; // å¦‚æœæŒ‰å–æ¶ˆï¼Œå°±çµæŸå‡½æ•¸
     }
 
-    // ¼g¤J½Òµ{»PÃC¦â
+    // å¯«å…¥èª²ç¨‹èˆ‡é¡è‰²
     cell.innerText = name;
     cell.style.backgroundColor = selectedColor;
-    cell.style.color = "#000"; // ¤å¦r¶Â¦â
+    cell.style.color = "#000"; // æ–‡å­—é»‘è‰²
 }

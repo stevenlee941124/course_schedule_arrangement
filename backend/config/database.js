@@ -13,7 +13,7 @@ const db = new sqlite3.Database(dbPath, (err) => {
 });
 
 function initializeDatabase() {
-  // ³Ğ«Ø courses ªí¡]¥]§t·sÄæ¦ì¡^
+  // å‰µå»º courses è¡¨ï¼ˆåŒ…å«æ–°æ¬„ä½ï¼‰
   db.run(`
     CREATE TABLE IF NOT EXISTS courses (
       id TEXT PRIMARY KEY,
@@ -31,13 +31,13 @@ function initializeDatabase() {
     } else {
       console.log('Courses table ready');
       
-      // ¹Á¸Õ²K¥[·sÄæ¦ì¡]¦pªGªí¤w¦s¦b¦ı¨S¦³³o¨ÇÄæ¦ì¡^
+      // å˜—è©¦æ·»åŠ æ–°æ¬„ä½ï¼ˆå¦‚æœè¡¨å·²å­˜åœ¨ä½†æ²’æœ‰é€™äº›æ¬„ä½ï¼‰
       addColumnIfNotExists('courses', 'type', 'TEXT DEFAULT "general"');
       addColumnIfNotExists('courses', 'color', 'TEXT DEFAULT "#a5b4fc"');
     }
   });
 
-  // ³Ğ«Ø selections ªí
+  // å‰µå»º selections è¡¨
   db.run(`
     CREATE TABLE IF NOT EXISTS selections (
       id TEXT PRIMARY KEY,
@@ -54,12 +54,12 @@ function initializeDatabase() {
     }
   });
 
-  // ³Ğ«Ø¯Á¤Ş
+  // å‰µå»ºç´¢å¼•
   db.run('CREATE INDEX IF NOT EXISTS idx_course_time ON courses(time)');
   db.run('CREATE INDEX IF NOT EXISTS idx_selection_user ON selections(user_id)');
 }
 
-// »²§U¨ç¼Æ¡G²K¥[Äæ¦ì¡]¦pªG¤£¦s¦b¡^
+// è¼”åŠ©å‡½æ•¸ï¼šæ·»åŠ æ¬„ä½ï¼ˆå¦‚æœä¸å­˜åœ¨ï¼‰
 function addColumnIfNotExists(table, column, definition) {
   db.all(`PRAGMA table_info(${table})`, (err, columns) => {
     if (err) {
