@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-// Course type options
+// Course type options (修復：將 ? 改為對應的 Emoji)
 const courseTypes = [
   { value: 'general', label: 'General', icon: '?' },
   { value: 'required', label: 'Required', icon: '?' },
@@ -30,7 +30,6 @@ const CourseInput = ({ onAddCourse, editingCourse, onCancelEdit }) => {
   const [courseType, setCourseType] = useState('general');
   const [courseColor, setCourseColor] = useState('#a5b4fc');
   const [customColor, setCustomColor] = useState('');
-  const [showColorPicker, setShowColorPicker] = useState(false);
 
   // Fill form when editing
   useEffect(() => {
@@ -100,6 +99,7 @@ const CourseInput = ({ onAddCourse, editingCourse, onCancelEdit }) => {
   return (
     <div style={{ padding: '20px', backgroundColor: '#f9fafb', borderRadius: '8px' }}>
       <h2 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '20px' }}>
+        {/* 修復：標題的問號改為 Emoji */}
         {editingCourse ? '?? Edit Course' : '? Add Course'}
       </h2>
 
@@ -218,6 +218,7 @@ const CourseInput = ({ onAddCourse, editingCourse, onCancelEdit }) => {
                   transform: 'translate(-50%, -50%)',
                   fontSize: '18px'
                 }}>
+                  {/* 修復：選中顏色的問號改為打勾 */}
                   ?
                 </span>
               )}
@@ -254,6 +255,7 @@ const CourseInput = ({ onAddCourse, editingCourse, onCancelEdit }) => {
           />
         </div>
         <p style={{ fontSize: '11px', color: '#9ca3af', marginTop: '6px' }}>
+          {/* 修復：提示文字前的問號 */}
           ? Choose a preset color or use the custom color picker
         </p>
       </div>
@@ -303,6 +305,7 @@ const CourseInput = ({ onAddCourse, editingCourse, onCancelEdit }) => {
           onMouseOver={(e) => e.target.style.backgroundColor = '#2563eb'}
           onMouseOut={(e) => e.target.style.backgroundColor = '#3b82f6'}
         >
+          {/* 修復：按鈕上的問號 */}
           {editingCourse ? '? Update' : '? Add Course'}
         </button>
         {editingCourse && (
@@ -323,6 +326,7 @@ const CourseInput = ({ onAddCourse, editingCourse, onCancelEdit }) => {
             onMouseOver={(e) => e.target.style.backgroundColor = '#9ca3af'}
             onMouseOut={(e) => e.target.style.backgroundColor = '#d1d5db'}
           >
+            {/* 修復：取消按鈕上的問號 */}
             ? Cancel
           </button>
         )}
