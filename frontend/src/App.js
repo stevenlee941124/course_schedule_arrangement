@@ -280,23 +280,34 @@ const App = () => {
           style={{ 
             backgroundColor: course.color, 
             color: '#333', 
-            height: `${duration * 6.25}rem`, 
+            // 修改 1: 高度計算稍微加一點點緩衝，或是改用 % 數配合 calc
+            // 這裡每格高度假設是 6rem (h-24)，所以總高度是 duration * 6rem
+            // 加上 border 的些微差異，通常用 calc(100% * duration + (duration - 1) * 1px) 會更準
+            // 但為了簡單，我們先用 rem 調整，確保它比格子稍微小一點點或剛好
+            height: `calc(${duration * 6}rem - 2px)`, 
+            zIndex: 10, // 修改 2: 加入 z-index 確保它浮在上方，不會被遮住
+            top: '1px', // 微調位置
+            left: '1px',
+            width: 'calc(100% - 2px)'
           }}
-          className={`absolute inset-0 w-full p-2 rounded-md shadow-sm text-sm flex flex-col justify-center items-center text-center cursor-pointer`}
+          className={`absolute p-2 rounded-md shadow-md text-sm flex flex-col justify-center items-center text-center cursor-pointer transition-transform hover:scale-[1.02]`}
           onClick={(e) => {
             e.stopPropagation(); 
-            deleteCourseGroup(course.groupId, course.day); // 點擊已有課程則刪除
+            deleteCourseGroup(course.groupId, course.day);
           }}
-          onMouseDown={(e) => e.stopPropagation()} // 防止點擊課程時觸發底下的選取事件
+          onMouseDown={(e) => e.stopPropagation()}
         >
-          <span className="font-bold block text-sm">{course.name}</span>
+          <span className="font-bold block text-sm leading-tight">{course.name}</span>
           
           <div className="text-xs opacity-75 flex items-center justify-center gap-1 mt-1">
             <span>{typeIcon}</span>
             <span>{course.type}</span>
           </div>
 
-          <Trash2 size={12} className="mt-1 text-red-500 hover:text-red-700 opacity-80" />
+          {/* 修改 3: 把垃圾桶移到右上角，避免佔用中間空間導致文字被擠壓 */}
+          <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity">
+             <Trash2 size={14} className="text-red-600 hover:text-red-800" />
+          </div>
         </div>
       );
     }
@@ -504,7 +515,7 @@ const App = () => {
                 </thead>
                 <tbody className="relative">
                   {[1, 2, 3, 4, 5, 6, 7, 8].map(period => (
-                    <tr key={period} className='h-24'>
+                    <tr key={period} className='h-24'> {/* 這裡的 h-24 對應 6rem */}
                       <td className="border border-stone-400 p-3 text-center font-bold text-stone-600 bg-stone-100 h-full align-middle">{period}</td>
                       {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'].map(day => (
                         <td 
