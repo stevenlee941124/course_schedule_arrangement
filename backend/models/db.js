@@ -2,7 +2,7 @@ const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 const fs = require('fs');
 
-// ½T«O database ¸ê®Æ§¨¦s¦b
+// ç¢ºä¿ database è³‡æ–™å¤¾å­˜åœ¨
 const dbDir = path.join(__dirname, '../../database');
 if (!fs.existsSync(dbDir)) {
   fs.mkdirSync(dbDir, { recursive: true });
@@ -12,16 +12,16 @@ const dbPath = path.join(dbDir, 'courses.db');
 
 const db = new sqlite3.Database(dbPath, (err) => {
   if (err) {
-    console.error('¸ê®Æ®w³s±µ¿ù»~:', err);
+    console.error('è³‡æ–™åº«é€£æŽ¥éŒ¯èª¤:', err);
   } else {
-    console.log('? ¸ê®Æ®w¤w³s±µ');
+    console.log('? è³‡æ–™åº«å·²é€£æŽ¥');
     initializeDatabase();
   }
 });
 
 function initializeDatabase() {
   db.serialize(() => {
-    // «Ø¥ß½Òµ{ªí
+    // å»ºç«‹èª²ç¨‹è¡¨
     db.run(`
       CREATE TABLE IF NOT EXISTS courses (
         id TEXT PRIMARY KEY,
@@ -31,9 +31,9 @@ function initializeDatabase() {
       )
     `, (err) => {
       if (err) {
-        console.error('«Ø¥ß courses ªí®É¥X¿ù:', err);
+        console.error('å»ºç«‹ courses è¡¨æ™‚å‡ºéŒ¯:', err);
       } else {
-        console.log('? courses ªí¤w·Ç³Æ¦n');
+        console.log('? courses è¡¨å·²æº–å‚™å¥½');
       }
     });
   });

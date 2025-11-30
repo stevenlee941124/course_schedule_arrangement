@@ -4,7 +4,7 @@ import ConflictModal from './components/ConflictModal';
 
 const App = () => {
   // Helper function to format period range (e.g., [1, 2, 3] -> "1-3")
-  // *** ¥²¶·¥ı«Å§i¡A¤~¯à¦b useMemo ¤º¨Ï¥Î ***
+  // *** å¿…é ˆå…ˆå®£å‘Šï¼Œæ‰èƒ½åœ¨ useMemo å…§ä½¿ç”¨ ***
   const formatPeriodRange = (periods) => {
     if (periods.length === 0) return '';
     const isContinuous = periods[periods.length - 1] === periods[0] + periods.length - 1;
@@ -69,7 +69,7 @@ const App = () => {
     // Sort periods and format range display
     Object.values(groups).forEach(group => {
         group.periods.sort((a, b) => a - b);
-        // ²{¦b formatPeriodRange ¤w¸g¦b useMemo ¤§«e³Q«Å§i¤F¡A©Ò¥H¥i¥H¥¿±`¦s¨ú
+        // ç¾åœ¨ formatPeriodRange å·²ç¶“åœ¨ useMemo ä¹‹å‰è¢«å®£å‘Šäº†ï¼Œæ‰€ä»¥å¯ä»¥æ­£å¸¸å­˜å–
         group.periodDisplay = formatPeriodRange(group.periods); 
     });
     return Object.values(groups);
@@ -172,22 +172,22 @@ const App = () => {
     let newPool = [...coursePool];
     const targetGroupId = pendingGroup[0].groupId;
     
-    // §ä¥X©Ò¦³»P pendingGroup ½Ä¬ğªº²{¦³½Òµ{¸s²Õ ID
+    // æ‰¾å‡ºæ‰€æœ‰èˆ‡ pendingGroup è¡çªçš„ç¾æœ‰èª²ç¨‹ç¾¤çµ„ ID
     const conflictingGroupIds = new Set();
     
     pendingGroup.forEach(pendingC => {
-        // ´M§ä¦b¸Ó®É¬q¥B¥Ø«e¤w¿ï¤¤ªº½Ä¬ğ½Òµ{
+        // å°‹æ‰¾åœ¨è©²æ™‚æ®µä¸”ç›®å‰å·²é¸ä¸­çš„è¡çªèª²ç¨‹
         const conflictingCourse = scheduledCourses.find(
             c => c.day === pendingC.day && c.period === pendingC.period && c.groupId !== targetGroupId
         );
         
         if (conflictingCourse) {
-            // ±N¾ã­Ó½Ä¬ğ½Òµ{ªº¸s²Õ ID °O¿ı¤U¨Ó
+            // å°‡æ•´å€‹è¡çªèª²ç¨‹çš„ç¾¤çµ„ ID è¨˜éŒ„ä¸‹ä¾†
             conflictingGroupIds.add(conflictingCourse.groupId);
         }
     });
 
-    // 1. ±N©Ò¦³½Ä¬ğªº½Òµ{¸s²Õ¼Ğ°O¬° deselected (¾ã²Õ²¾°£)
+    // 1. å°‡æ‰€æœ‰è¡çªçš„èª²ç¨‹ç¾¤çµ„æ¨™è¨˜ç‚º deselected (æ•´çµ„ç§»é™¤)
     if (conflictingGroupIds.size > 0) {
         newPool = newPool.map(c => {
             if (conflictingGroupIds.has(c.groupId) && c.day === pendingGroup[0].day) {
@@ -197,7 +197,7 @@ const App = () => {
         });
     }
 
-    // 2. ¿ï¤¤ pending course group (¥[¤J·sªº½Òµ{¸s²Õ)
+    // 2. é¸ä¸­ pending course group (åŠ å…¥æ–°çš„èª²ç¨‹ç¾¤çµ„)
     newPool = newPool.map(c => 
         c.groupId === targetGroupId ? {...c, selected: true} : c
     );
@@ -307,12 +307,12 @@ const App = () => {
               <div className='p-3 rounded-lg text-sm font-medium transition-all bg-blue-100 text-blue-800 border border-blue-200'>
                 {isGridMode ? (
                     <div className='flex items-center justify-between'>
-                        {/* ­×´_¡G°İ¸¹§ï¬°¥´¤Ä */}
+                        {/* ä¿®å¾©ï¼šå•è™Ÿæ”¹ç‚ºæ‰“å‹¾ */}
                         <span>? Time selected! Enter details and click **"Add to Pool"**.</span>
                         <X size={18} className='cursor-pointer' onClick={() => setIsGridMode(false)} />
                     </div>
                 ) : (
-                    /* ­×´_¡G°İ¸¹§ï¬°¿Oªw */
+                    /* ä¿®å¾©ï¼šå•è™Ÿæ”¹ç‚ºç‡ˆæ³¡ */
                     <span>? **Click an empty cell** on the schedule to pre-fill the time.</span>
                 )}
               </div>

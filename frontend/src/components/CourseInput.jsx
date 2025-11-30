@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 
-// Course type options (­×´_¡G±N ? §ï¬°¹ïÀ³ªº Emoji)
+// Course type options (ä¿®å¾©ï¼šå°‡ ? æ”¹ç‚ºå°æ‡‰çš„ Emoji)
 const courseTypes = [
-  { value: 'general', label: 'General', icon: '?' },
-  { value: 'required', label: 'Required', icon: '?' },
-  { value: 'elective', label: 'Elective', icon: '?' },
-  { value: 'major', label: 'Major', icon: '?' },
-  { value: 'minor', label: 'Minor', icon: '?' },
-  { value: 'lab', label: 'Lab', icon: '?' }
+  { value: 'general', label: 'General', icon: 'ğŸ“–' },
+  { value: 'required', label: 'Required', icon: 'â­' },
+  { value: 'elective', label: 'Elective', icon: 'ğŸ¨' },
+  { value: 'major', label: 'Major', icon: 'ğŸ¯' },
+  { value: 'minor', label: 'Minor', icon: 'ğŸŒ±' },
+  { value: 'lab', label: 'Lab', icon: 'ğŸ§ª' }
 ];
 
 // Default color options
@@ -99,8 +99,8 @@ const CourseInput = ({ onAddCourse, editingCourse, onCancelEdit }) => {
   return (
     <div style={{ padding: '20px', backgroundColor: '#f9fafb', borderRadius: '8px' }}>
       <h2 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '20px' }}>
-        {/* ­×´_¡G¼ĞÃDªº°İ¸¹§ï¬° Emoji */}
-        {editingCourse ? '?? Edit Course' : '? Add Course'}
+        {/* ä¿®å¾©ï¼šæ¨™é¡Œçš„å•è™Ÿæ”¹ç‚º Emoji */}
+        {editingCourse ? 'âœï¸ Edit Course' : 'â• Add Course'}
       </h2>
 
       {/* Course Name */}
@@ -218,8 +218,8 @@ const CourseInput = ({ onAddCourse, editingCourse, onCancelEdit }) => {
                   transform: 'translate(-50%, -50%)',
                   fontSize: '18px'
                 }}>
-                  {/* ­×´_¡G¿ï¤¤ÃC¦âªº°İ¸¹§ï¬°¥´¤Ä */}
-                  ?
+                  {/* ä¿®å¾©ï¼šé¸ä¸­é¡è‰²çš„å•è™Ÿæ”¹ç‚ºæ‰“å‹¾ */}
+                  âœ“
                 </span>
               )}
             </button>
@@ -255,8 +255,8 @@ const CourseInput = ({ onAddCourse, editingCourse, onCancelEdit }) => {
           />
         </div>
         <p style={{ fontSize: '11px', color: '#9ca3af', marginTop: '6px' }}>
-          {/* ­×´_¡G´£¥Ü¤å¦r«eªº°İ¸¹ */}
-          ? Choose a preset color or use the custom color picker
+          {/* ä¿®å¾©ï¼šæç¤ºæ–‡å­—å‰çš„å•è™Ÿ */}
+          ğŸ’¡ Choose a preset color or use the custom color picker
         </p>
       </div>
 
@@ -305,8 +305,8 @@ const CourseInput = ({ onAddCourse, editingCourse, onCancelEdit }) => {
           onMouseOver={(e) => e.target.style.backgroundColor = '#2563eb'}
           onMouseOut={(e) => e.target.style.backgroundColor = '#3b82f6'}
         >
-          {/* ­×´_¡G«ö¶s¤Wªº°İ¸¹ */}
-          {editingCourse ? '? Update' : '? Add Course'}
+          {/* ä¿®å¾©ï¼šæŒ‰éˆ•ä¸Šçš„å•è™Ÿ */}
+          {editingCourse ? 'ğŸ’¾ Update' : 'â• Add Course'}
         </button>
         {editingCourse && (
           <button
@@ -326,8 +326,8 @@ const CourseInput = ({ onAddCourse, editingCourse, onCancelEdit }) => {
             onMouseOver={(e) => e.target.style.backgroundColor = '#9ca3af'}
             onMouseOut={(e) => e.target.style.backgroundColor = '#d1d5db'}
           >
-            {/* ­×´_¡G¨ú®ø«ö¶s¤Wªº°İ¸¹ */}
-            ? Cancel
+            {/* ä¿®å¾©ï¼šå–æ¶ˆæŒ‰éˆ•ä¸Šçš„å•è™Ÿ */}
+            ğŸš« Cancel
           </button>
         )}
       </div>
